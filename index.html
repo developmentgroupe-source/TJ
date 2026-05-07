@@ -3,94 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Journal Pro | Stocks</title>
+    <title>Pro Trading Journal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --bg: #0b0e14; --side: #151921; --accent: #2962ff; --text: #d1d4dc; --border: #242933; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 320px; background: var(--side); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; box-sizing: border-box; }
-        .main { flex: 1; display: flex; flex-direction: column; background: #000; }
-        h2 { color: var(--accent); margin: 0 0 20px 0; font-size: 22px; letter-spacing: -0.5px; }
-        input, select, textarea { background: #1e222d; border: 1px solid var(--border); color: white; padding: 12px; margin-bottom: 12px; border-radius: 6px; width: 100%; box-sizing: border-box; outline: none; }
-        .btn-save { background: var(--accent); color: white; border: none; padding: 15px; cursor: pointer; border-radius: 6px; font-weight: 600; width: 100%; }
-        .trade-list { flex: 1; overflow-y: auto; margin-top: 20px; }
-        .trade-card { background: #1c212b; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer; }
-        .trade-card:hover { border-color: var(--accent); }
-        #chart-container { flex: 1; width: 100%; }
+        body { background-color: #0f172a; color: white; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
-<body>
-    <div class="sidebar">
-        <h2>Journal Pro</h2>
-        <input type="text" id="sym" placeholder="Ej: NASDAQ:AAPL">
-        <input type="date" id="date">
-        <select id="side"><option value="LONG">LONG</option><option value="SHORT">SHORT</option></select>
-        <textarea id="notes" placeholder="Notas del trade..." rows="3"></textarea>
-        <button class="btn-save" onclick="addTrade()">Guardar Registro</button>
-        <div class="trade-list" id="list"></div>
-    </div>
-    <div class="main">
-        <div id="chart-container"></div>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-blue-400 tracking-tight">Trading<span class="text-white">Journal</span>.pro</h1>
+            <div id="connection-status" class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full border border-green-500/30">Conectado a Firebase</div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="lg:col-span-1 space-y-6">
+                <div class="glass p-6 rounded-2xl">
+                    <h2 class="text-xl font-semibold mb-4 text-blue-300">Nuevo Trade</h2>
+                    <form id="trade-form" class="space-y-4">
+                        <input type="text" id="symbol" placeholder="Símbolo (ej: NVDA)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 focus:outline-none focus:border-blue-500 uppercase" required>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="number" id="entry" step="0.01" placeholder="Entrada" class="bg-slate-900 border border-slate-700 rounded-lg p-3 focus:outline-none" required>
+                            <input type="number" id="exit" step="0.01" placeholder="Salida" class="bg-slate-900 border border-slate-700 rounded-lg p-3 focus:outline-none" required>
+                        </div>
+                        <input type="text" id="chart-url" placeholder="Link del Gráfico (TradingView)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 focus:outline-none">
+                        <textarea id="notes" placeholder="¿Qué viste en el precio?" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 h-24 focus:outline-none"></textarea>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-blue-900/20">Guardar Trade</button>
+                    </form>
+                </div>
+
+                <div id="trades-list" class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                    </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass rounded-2xl overflow-hidden h-[600px] relative">
+                    <div id="tradingview_widget" class="h-full"></div>
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    <script>
-        let trades = JSON.parse(localStorage.getItem('stocks_journal_v2') || '[]');
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        function initChart(symbol) {
+        // CONFIGURACIÓN QUE SACAMOS DE TU CAPTURA
+        const firebaseConfig = {
+            apiKey: "AIzaSyBSyRUK_KMRyECGZ5NRZ1wvE5WcYFm05Sw",
+            authDomain: "trading-journal-ac545.firebaseapp.com",
+            projectId: "trading-journal-ac545",
+            storageBucket: "trading-journal-ac545.firebasestorage.app",
+            messagingSenderId: "113557647477",
+            appId: "1:113557647477:web:79ba58c3f5ff6efd00c83c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // LÓGICA DE TRADINGVIEW
+        function loadChart(symbol = 'NASDAQ:NVDA') {
             new TradingView.widget({
                 "autosize": true,
-                "symbol": symbol.toUpperCase().trim(),
-                "interval": "5",
-                "timezone": "America/New_York", // Ajustado para horario de New York (Stocks)
+                "symbol": symbol,
+                "interval": "D",
+                "timezone": "America/New_York",
                 "theme": "dark",
                 "style": "1",
-                "locale": "es",
+                "locale": "en",
                 "toolbar_bg": "#f1f3f6",
                 "enable_publishing": false,
                 "hide_side_toolbar": false,
                 "allow_symbol_change": true,
-                "save_image": true,
-                "studies": [],
-                "show_popup_button": true,
-                "popup_width": "1000",
-                "popup_height": "650",
-                "container_id": "chart-container"
+                "container_id": "tradingview_widget"
             });
         }
 
-        function addTrade() {
-            const sym = document.getElementById('sym').value.toUpperCase().trim();
-            const date = document.getElementById('date').value;
-            const side = document.getElementById('side').value;
-            const notes = document.getElementById('notes').value;
-            if(!sym || !date) return alert("Símbolo y fecha requeridos");
+        // GUARDAR TRADE
+        document.getElementById('trade-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const symbol = document.getElementById('symbol').value.toUpperCase();
+            
+            try {
+                await addDoc(collection(db, "trades"), {
+                    symbol: symbol,
+                    entry: document.getElementById('entry').value,
+                    exit: document.getElementById('exit').value,
+                    chart: document.getElementById('chart-url').value,
+                    notes: document.getElementById('notes').value,
+                    timestamp: new Date()
+                });
+                document.getElementById('trade-form').reset();
+                loadChart(symbol);
+            } catch (error) {
+                console.error("Error al guardar:", error);
+            }
+        });
 
-            const trade = { sym, date, side, notes, id: Date.now() };
-            trades.unshift(trade);
-            localStorage.setItem('stocks_journal_v2', JSON.stringify(trades));
-            renderList();
-            initChart(sym);
-        }
-
-        function renderList() {
-            const list = document.getElementById('list');
+        // LEER TRADES EN TIEMPO REAL
+        onSnapshot(query(collection(db, "trades"), orderBy("timestamp", "desc")), (snapshot) => {
+            const list = document.getElementById('trades-list');
             list.innerHTML = '';
-            trades.forEach(t => {
-                const card = document.createElement('div');
-                card.className = 'trade-card';
-                card.innerHTML = `<strong>${t.sym}</strong><span>${t.side} | ${t.date}</span>`;
-                card.onclick = () => {
-                    document.getElementById('notes').value = t.notes;
-                    initChart(t.sym);
-                };
-                list.appendChild(card);
+            snapshot.forEach((doc) => {
+                const trade = doc.data();
+                const profit = trade.exit - trade.entry;
+                const color = profit >= 0 ? 'text-green-400' : 'text-red-400';
+                
+                list.innerHTML += `
+                    <div class="glass p-4 rounded-xl cursor-pointer hover:border-blue-500 transition" onclick="window.loadSpecificChart('${trade.symbol}')">
+                        <div class="flex justify-between font-bold uppercase">
+                            <span>${trade.symbol}</span>
+                            <span class="${color}">${profit.toFixed(2)}$</span>
+                        </div>
+                        <p class="text-xs text-slate-400 truncate mt-1">${trade.notes || 'Sin notas'}</p>
+                    </div>
+                `;
             });
-        }
+        });
 
-        window.onload = () => {
-            renderList();
-            initChart(trades.length > 0 ? trades[0].sym : "NASDAQ:AAPL");
-        };
+        window.loadSpecificChart = loadChart;
+        loadChart(); // Carga inicial
     </script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </body>
 </html>
