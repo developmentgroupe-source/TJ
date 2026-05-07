@@ -3,50 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Journal Pro — Vercel Edition</title>
+    <title>Trading Journal Pro | Vercel</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         :root {
             --bg: #0b0e14; --panel: #151921; --border: #242933;
             --text: #d1d4dc; --accent: #2962ff; --green: #089981; --red: #f23645;
         }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
         .sidebar { width: 320px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
         .main { flex: 1; display: flex; flex-direction: column; }
         
         #chart { flex: 1; background: #000; margin: 15px; border-radius: 8px; border: 1px solid var(--border); }
         
-        input, select { background: #1e222d; border: 1px solid var(--border); color: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+        input, select { background: #1e222d; border: 1px solid var(--border); color: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 14px; outline: none; }
+        input:focus { border-color: var(--accent); }
+
         .btn { background: var(--accent); color: white; border: none; padding: 12px; cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%; transition: 0.2s; }
         .btn:hover { filter: brightness(1.2); }
+        .btn:disabled { background: #3e4149; cursor: not-allowed; opacity: 0.5; }
         
-        .trade-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; background: #1c212b; margin-bottom: 8px; border-radius: 6px; }
-        .trade-item:hover { border-color: var(--accent); }
+        .trade-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; background: #1c212b; margin-bottom: 8px; border-radius: 6px; border: 1px solid transparent; transition: 0.2s; }
+        .trade-item:hover { border-color: var(--accent); background: #252b37; }
         
-        .status { font-size: 11px; margin-top: 5px; color: var(--green); opacity: 0.8; }
+        .status { font-size: 12px; margin-bottom: 15px; padding: 10px; border-radius: 6px; background: #000; text-align: center; border: 1px solid var(--border); }
+        #api-status { color: #ffb340; font-weight: 500; }
+        
+        label { font-size: 11px; color: #848e9c; margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2 style="color:var(--accent); margin:0 0 20px 0;">Journal Pro</h2>
+    <h2 style="color:var(--accent); margin:0 0 15px 0;">Journal Pro</h2>
+    <div id="api-status" class="status">Verificando conexión...</div>
     
-    <div id="api-status" class="status">Cargando configuración de Vercel...</div>
+    <label>Activo</label>
+    <input type="text" id="t-sym" placeholder="Ej: BTC/USD o AAPL">
     
-    <div style="margin: 20px 0; border-top: 1px solid var(--border)"></div>
-
-    <label style="font-size:12px; margin-bottom:5px; display:block;">NUEVA OPERACIÓN</label>
-    <input type="text" id="t-sym" placeholder="Símbolo (AAPL, BTC/USD, EUR/USD)">
+    <label>Fecha de entrada</label>
     <input type="date" id="t-date">
+    
+    <label>Dirección</label>
     <select id="t-side">
         <option value="buy">LONG (Compra)</option>
         <option value="sell">SHORT (Venta)</option>
     </select>
-    <button class="btn" onclick="addTrade()">Añadir Trade</button>
+    
+    <button class="btn" id="add-btn" onclick="addTrade()" disabled>Añadir a mi Diario</button>
 
-    <div style="margin-top:20px; overflow-y:auto; flex:1">
-        <label style="font-size:12px; margin-bottom:10px; display:block;">HISTORIAL DE TRADES</label>
+    <div style="margin-top:20px; overflow-y:auto; flex:1; padding-right: 5px;">
+        <label>Operaciones Guardadas</label>
         <div id="list"></div>
     </div>
 </div>
@@ -57,35 +65,111 @@
 
 <script>
     let API_KEY = "";
-    let trades = JSON.parse(localStorage.getItem('journal_v3_data') || '[]');
+    let trades = JSON.parse(localStorage.getItem('journal_v4_data') || '[]');
     let chart, candleSeries;
 
-    // 1. Obtener la clave desde el Backend de Vercel (carpeta /api)
+    // 1. Obtener configuración (Ocultando la clave de la vista)
     async function fetchConfig() {
+        const statusEl = document.getElementById('api-status');
+        const btn = document.getElementById('add-btn');
+        
         try {
             const res = await fetch('/api/get-key.mjs');
             const data = await res.json();
+            
             if (data.apiKey) {
                 API_KEY = data.apiKey;
-                document.getElementById('api-status').textContent = "✓ Conectado a Twelve Data (Vercel)";
+                statusEl.textContent = "● Sistema Online";
+                statusEl.style.color = "var(--green)";
+                statusEl.style.borderColor = "var(--green)";
+                btn.disabled = false;
             } else {
-                throw new Error("No se encontró la clave en Vercel");
+                throw new Error();
             }
         } catch (e) {
-            document.getElementById('api-status').textContent = "✗ Error de configuración";
-            document.getElementById('api-status').style.color = "var(--red)";
-            console.error(e);
+            statusEl.textContent = "● Error de Conexión";
+            statusEl.style.color = "var(--red)";
+            statusEl.style.borderColor = "var(--red)";
         }
     }
 
-    // 2. Inicializar Gráfico
+    // 2. Gráfico
     function initChart() {
         const container = document.getElementById('chart');
         chart = LightweightCharts.createChart(container, {
             layout: { background: { color: '#000000' }, textColor: '#d1d4dc' },
             grid: { vertLines: { color: '#131722' }, horzLines: { color: '#131722' } },
-            timeScale: { timeVisible: true }
+            timeScale: { timeVisible: true, borderVisible: false },
+            rightPriceScale: { borderVisible: false }
         });
         candleSeries = chart.addCandlestickSeries({
             upColor: '#089981', downColor: '#f23645', borderVisible: false,
-            wickUpColor: '#089981', wickDownColor: '#f
+            wickUpColor: '#089981', wickDownColor: '#f23645',
+        });
+        
+        document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
+        renderList();
+    }
+
+    // 3. Acciones
+    async function addTrade() {
+        const sym = document.getElementById('t-sym').value.toUpperCase().trim();
+        const date = document.getElementById('t-date').value;
+        const side = document.getElementById('t-side').value;
+
+        if(!sym) return alert("Ingresa un símbolo válido");
+
+        const newTrade = { sym, date, side, id: Date.now() };
+        trades.unshift(newTrade);
+        localStorage.setItem('journal_v4_data', JSON.stringify(trades));
+        renderList();
+        loadChart(newTrade);
+    }
+
+    async function loadChart(trade) {
+        const url = `https://api.twelvedata.com/time_series?symbol=${trade.sym}&interval=1h&apikey=${API_KEY}&outputsize=100&order=ASC`;
+        
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            if(data.status === "error") throw new Error(data.message);
+
+            const bars = data.values.map(v => ({
+                time: new Date(v.datetime).getTime() / 1000,
+                open: parseFloat(v.open), high: parseFloat(v.high),
+                low: parseFloat(v.low), close: parseFloat(v.close)
+            }));
+
+            candleSeries.setData(bars);
+            
+            const tradeTs = new Date(trade.date).getTime() / 1000;
+            candleSeries.setMarkers([{
+                time: tradeTs,
+                position: trade.side === 'buy' ? 'belowBar' : 'aboveBar',
+                color: trade.side === 'buy' ? '#089981' : '#f23645',
+                shape: trade.side === 'buy' ? 'arrowUp' : 'arrowDown',
+                text: trade.side.toUpperCase()
+            }]);
+
+            chart.timeScale().fitContent();
+        } catch(e) {
+            alert("Error Twelve Data: " + e.message);
+        }
+    }
+
+    function renderList() {
+        const container = document.getElementById('list');
+        container.innerHTML = '';
+        trades.forEach(t => {
+            const d = document.createElement('div');
+            d.className = 'trade-item';
+            d.innerHTML = `<strong>${t.sym}</strong><br><span style="font-size:11px; opacity:0.7">${t.date} · ${t.side.toUpperCase()}</span>`;
+            d.onclick = () => loadChart(t);
+            container.appendChild(d);
+        });
+    }
+
+    window.onload = () => { initChart(); fetchConfig(); };
+</script>
+</body>
+</html>
