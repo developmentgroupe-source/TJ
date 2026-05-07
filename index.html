@@ -2,140 +2,97 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Journal Pro | Twelve Data Fix</title>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Journal Pro</title>
     <style>
-        :root { --bg: #0b0e14; --panel: #151921; --border: #242933; --accent: #2962ff; }
-        body { background: var(--bg); color: #d1d4dc; font-family: sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 320px; background: var(--panel); border-right: 1px solid var(--border); padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; }
-        .main { flex: 1; background: #000; position: relative; }
-        #chart { width: 100%; height: 100%; }
-        input, select { background: #1e222d; border: 1px solid var(--border); color: white; padding: 12px; margin-bottom: 15px; border-radius: 6px; width: 100%; box-sizing: border-box; }
-        .btn { background: var(--accent); color: white; border: none; padding: 14px; cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%; }
-        .trade-item { padding: 10px; background: #1c212b; margin-top: 10px; border-radius: 6px; cursor: pointer; font-size: 13px; border: 1px solid transparent; }
-        #status { font-size: 11px; color: #ffb340; text-align: center; margin: 10px 0; font-family: monospace; }
+        :root { --bg: #0b0e14; --side: #151921; --accent: #2962ff; --text: #d1d4dc; --border: #242933; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 320px; background: var(--side); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; box-sizing: border-box; }
+        .main { flex: 1; display: flex; flex-direction: column; background: #000; }
+        h2 { color: var(--accent); margin: 0 0 20px 0; font-size: 22px; letter-spacing: -0.5px; }
+        input, select, textarea { background: #1e222d; border: 1px solid var(--border); color: white; padding: 12px; margin-bottom: 12px; border-radius: 6px; width: 100%; box-sizing: border-box; outline: none; }
+        input:focus { border-color: var(--accent); }
+        .btn-save { background: var(--accent); color: white; border: none; padding: 15px; cursor: pointer; border-radius: 6px; font-weight: 600; width: 100%; transition: opacity 0.2s; }
+        .btn-save:hover { opacity: 0.9; }
+        .trade-list { flex: 1; overflow-y: auto; margin-top: 20px; padding-right: 5px; }
+        .trade-card { background: #1c212b; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.1s; }
+        .trade-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .trade-card strong { color: #fff; font-size: 14px; }
+        .trade-card span { font-size: 12px; color: #787b86; display: block; margin-top: 4px; }
+        #chart-container { flex: 1; width: 100%; }
+        /* Scrollbar styling */
+        .trade-list::-webkit-scrollbar { width: 4px; }
+        .trade-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     </style>
 </head>
 <body>
+    <div class="sidebar">
+        <h2>Journal Pro</h2>
+        <input type="text" id="sym" placeholder="Símbolo (Ej: BTCUSDT)">
+        <input type="date" id="date">
+        <select id="side"><option value="LONG">LONG</option><option value="SHORT">SHORT</option></select>
+        <textarea id="notes" placeholder="Notas del trade..." rows="3"></textarea>
+        <button class="btn-save" onclick="addTrade()">Guardar Registro</button>
+        <div class="trade-list" id="list"></div>
+    </div>
+    <div class="main">
+        <div id="chart-container"></div>
+    </div>
 
-<div class="sidebar">
-    <h2 style="color:var(--accent)">Journal Pro</h2>
-    <input type="text" id="sym" placeholder="Símbolo (Ej: BTC/USD)">
-    <input type="date" id="date">
-    <select id="side"><option value="buy">LONG</option><option value="sell">SHORT</option></select>
-    <button class="btn" onclick="addNewTrade()">Añadir y Cargar</button>
-    <div id="status">Esperando...</div>
-    <div id="list" style="overflow-y:auto; flex:1;"></div>
-</div>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        let trades = JSON.parse(localStorage.getItem('final_journal_data') || '[]');
 
-<div class="main"><div id="chart"></div></div>
-
-<script>
-    // 1. CONFIGURACIÓN
-    const API_KEY = "f555d5dc66dc44e19c96376985c8da49"; 
-    let trades = JSON.parse(localStorage.getItem('journal_v_final') || '[]');
-    let chart = null;
-    let candleSeries = null;
-
-    // 2. FUNCIÓN PARA ASEGURAR QUE EL GRÁFICO EXISTE
-    function ensureChartExists() {
-        if (candleSeries) return true; // Ya está listo
-
-        const container = document.getElementById('chart');
-        if (!container) return false;
-
-        try {
-            chart = LightweightCharts.createChart(container, {
-                layout: { background: { color: '#000000' }, textColor: '#d1d4dc' },
-                grid: { vertLines: { color: '#131722' }, horzLines: { color: '#131722' } },
-                timeScale: { timeVisible: true }
+        function initChart(symbol) {
+            new TradingView.widget({
+                "autosize": true,
+                "symbol": symbol.includes(":") ? symbol : "BINANCE:" + symbol,
+                "interval": "5",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "es",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "container_id": "chart-container"
             });
-            candleSeries = chart.addCandlestickSeries({
-                upColor: '#089981', downColor: '#f23645', borderVisible: false,
-                wickUpColor: '#089981', wickDownColor: '#f23645'
+        }
+
+        function addTrade() {
+            const sym = document.getElementById('sym').value.toUpperCase().trim();
+            const date = document.getElementById('date').value;
+            const side = document.getElementById('side').value;
+            const notes = document.getElementById('notes').value;
+            if(!sym || !date) return alert("Símbolo y fecha requeridos");
+
+            const trade = { sym, date, side, notes, id: Date.now() };
+            trades.unshift(trade);
+            localStorage.setItem('final_journal_data', JSON.stringify(trades));
+            renderList();
+            initChart(sym);
+        }
+
+        function renderList() {
+            const list = document.getElementById('list');
+            list.innerHTML = '';
+            trades.forEach(t => {
+                const card = document.createElement('div');
+                card.className = 'trade-card';
+                card.innerHTML = `<strong>${t.sym}</strong><span>${t.side} | ${t.date}</span>`;
+                card.onclick = () => {
+                    document.getElementById('notes').value = t.notes;
+                    initChart(t.sym);
+                };
+                list.appendChild(card);
             });
-            return true;
-        } catch (e) {
-            console.error("Error inicializando gráfico:", e);
-            return false;
-        }
-    }
-
-    // 3. CARGAR DATOS
-    async function loadTwelveData(trade) {
-        if (!ensureChartExists()) {
-            document.getElementById('status').innerText = "Error: No se pudo crear el gráfico.";
-            return;
         }
 
-        document.getElementById('status').innerText = `Cargando ${trade.sym}...`;
-
-        try {
-            const url = `https://api.twelvedata.com/time_series?symbol=${trade.sym}&interval=1day&apikey=${API_KEY}&outputsize=500&order=ASC`;
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (data.status === "error") throw new Error(data.message);
-
-            const bars = data.values.map(v => ({
-                time: v.datetime,
-                open: parseFloat(v.open), 
-                high: parseFloat(v.high),
-                low: parseFloat(v.low), 
-                close: parseFloat(v.close)
-            }));
-
-            // AQUÍ YA NO PUEDE DAR ERROR DE UNDEFINED
-            candleSeries.setData(bars);
-
-            // PONER FLECHA AUTOMÁTICA
-            candleSeries.setMarkers([{
-                time: trade.date,
-                position: trade.side === 'buy' ? 'belowBar' : 'aboveBar',
-                color: trade.side === 'buy' ? '#089981' : '#f23645',
-                shape: trade.side === 'buy' ? 'arrowUp' : 'arrowDown',
-                text: 'ENTRADA'
-            }]);
-
-            chart.timeScale().fitContent();
-            document.getElementById('status').innerText = "Datos actualizados ✓";
-        } catch (e) {
-            document.getElementById('status').innerText = "Error: " + e.message;
-        }
-    }
-
-    function addNewTrade() {
-        const sym = document.getElementById('sym').value.toUpperCase().trim();
-        const date = document.getElementById('date').value;
-        const side = document.getElementById('side').value;
-        if(!sym || !date) return alert("Faltan datos");
-
-        const trade = { sym, date, side };
-        trades.unshift(trade);
-        localStorage.setItem('journal_v_final', JSON.stringify(trades));
-        renderList();
-        loadTwelveData(trade);
-    }
-
-    function renderList() {
-        const container = document.getElementById('list');
-        container.innerHTML = '';
-        trades.forEach(t => {
-            const d = document.createElement('div');
-            d.className = 'trade-item';
-            d.innerHTML = `<b>${t.sym}</b> - ${t.side}<br>${t.date}`;
-            d.onclick = () => loadTwelveData(t);
-            container.appendChild(d);
-        });
-    }
-
-    // Al cargar, simplemente preparamos la lista y el gráfico si hay datos
-    window.onload = () => {
-        renderList();
-        if(trades.length > 0) {
-            setTimeout(() => loadTwelveData(trades[0]), 500); 
-        }
-    };
-</script>
+        window.onload = () => {
+            renderList();
+            initChart(trades.length > 0 ? trades[0].sym : "BINANCE:BTCUSDT");
+        };
+    </script>
 </body>
 </html>
