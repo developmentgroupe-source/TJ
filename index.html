@@ -3,56 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Trading Journal</title>
+    <title>Trading Journal Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #0f172a; color: white; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        :root { --bg-dark: #0b0e14; --card-bg: #151921; --accent: #3b82f6; --text-dim: #94a3b8; }
+        body { background-color: var(--bg-dark); color: white; font-family: 'Inter', sans-serif; }
+        .sidebar { width: 240px; border-right: 1px solid #1e293b; height: 100vh; position: fixed; }
+        .main-content { margin-left: 240px; padding: 24px; }
+        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid #1e293b; }
+        .nav-item { padding: 12px 16px; border-radius: 8px; color: var(--text-dim); transition: 0.2s; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .nav-item:hover, .nav-item.active { background: #1e293b; color: white; }
+        .trade-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        .trade-table tr { background: var(--card-bg); }
+        .trade-table td, .trade-table th { padding: 12px 16px; font-size: 13px; }
+        .trade-table th { color: var(--text-dim); text-align: left; text-transform: uppercase; font-size: 11px; }
+        .btn-primary { background: #3b82f6; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; }
+        .status-win { color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 4px; }
+        .status-loss { color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 4px; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body>
 
-    <div class="max-w-7xl mx-auto">
+    <div class="sidebar p-4 flex flex-col justify-between">
+        <div>
+            <div class="text-blue-500 font-bold text-xl mb-8 flex items-center gap-2">
+                <i class="fas fa-chart-line"></i> JOURNAL
+            </div>
+            <nav class="space-y-2">
+                <div class="nav-item active"><i class="fas fa-list"></i> Mis trades</div>
+                <div class="nav-item"><i class="fas fa-plus-circle"></i> Nuevo trade</div>
+                <div class="nav-item"><i class="fas fa-chart-pie"></i> Analítica</div>
+                <div class="nav-item"><i class="fas fa-file-import"></i> Importar trades</div>
+                <div class="nav-item"><i class="fas fa-tv"></i> Exportar a TV</div>
+            </nav>
+        </div>
+        <div class="p-4 bg-slate-900 rounded-lg">
+            <div class="text-xs text-slate-400">P&L TOTAL</div>
+            <div class="text-lg font-bold text-green-400" id="total-pl-sidebar">$0.00</div>
+        </div>
+    </div>
+
+    <div class="main-content">
         <header class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-blue-400 tracking-tight">Trading<span class="text-white">Journal</span>.pro</h1>
-            <div id="connection-status" class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full border border-green-500/30">Conectado a Firebase</div>
+            <div>
+                <h1 class="text-2xl font-bold">Mis trades</h1>
+                <p class="text-sm text-slate-400" id="current-date"></p>
+            </div>
+            <div class="flex gap-3">
+                <button class="bg-slate-800 px-4 py-2 rounded-lg text-sm"><i class="fas fa-sync"></i> Sync</button>
+                <button class="btn-primary text-sm">+ Nuevo trade</button>
+            </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <div class="lg:col-span-1 space-y-6">
-                <div class="glass p-6 rounded-2xl">
-                    <h2 class="text-xl font-semibold mb-4 text-blue-300">Nuevo Trade</h2>
-                    <form id="trade-form" class="space-y-4">
-                        <input type="text" id="symbol" placeholder="Símbolo (ej: NVDA)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 focus:outline-none focus:border-blue-500 uppercase" required>
-                        <div class="grid grid-cols-2 gap-4">
-                            <input type="number" id="entry" step="0.01" placeholder="Entrada" class="bg-slate-900 border border-slate-700 rounded-lg p-3 focus:outline-none" required>
-                            <input type="number" id="exit" step="0.01" placeholder="Salida" class="bg-slate-900 border border-slate-700 rounded-lg p-3 focus:outline-none" required>
-                        </div>
-                        <input type="text" id="chart-url" placeholder="Link del Gráfico (TradingView)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 focus:outline-none">
-                        <textarea id="notes" placeholder="¿Qué viste en el precio?" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 h-24 focus:outline-none"></textarea>
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-blue-900/20">Guardar Trade</button>
-                    </form>
-                </div>
-
-                <div id="trades-list" class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-                    </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8 text-center">
+            <div class="stat-card">
+                <div class="text-[10px] text-slate-400">P&L TOTAL</div>
+                <div class="text-xl font-bold text-green-400" id="stats-pl">$0.00</div>
             </div>
-
-            <div class="lg:col-span-2 space-y-6">
-                <div class="glass rounded-2xl overflow-hidden h-[600px] relative">
-                    <div id="tradingview_widget" class="h-full"></div>
-                </div>
+            <div class="stat-card">
+                <div class="text-[10px] text-slate-400">WIN RATE</div>
+                <div class="text-xl font-bold text-blue-400" id="stats-wr">0%</div>
             </div>
+            <div class="stat-card">
+                <div class="text-[10px] text-slate-400">PROFIT FACTOR</div>
+                <div class="text-xl font-bold">0.0</div>
+            </div>
+            <div class="stat-card">
+                <div class="text-[10px] text-slate-400">AVG WIN</div>
+                <div class="text-xl font-bold text-green-400">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="text-[10px] text-slate-400">OPEN</div>
+                <div class="text-xl font-bold">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="text-[10px] text-slate-400">TOTAL TRADES</div>
+                <div class="text-xl font-bold" id="stats-total">0</div>
+            </div>
+        </div>
 
+        <div class="overflow-x-auto">
+            <table class="trade-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Ticker</th>
+                        <th>Dir</th>
+                        <th>Entrada</th>
+                        <th>Salida</th>
+                        <th>P&L $</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="trades-tbody">
+                    </tbody>
+            </table>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CONFIGURACIÓN QUE SACAMOS DE TU CAPTURA
         const firebaseConfig = {
             apiKey: "AIzaSyBSyRUK_KMRyECGZ5NRZ1wvE5WcYFm05Sw",
             authDomain: "trading-journal-ac545.firebaseapp.com",
@@ -65,69 +119,44 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // LÓGICA DE TRADINGVIEW
-        function loadChart(symbol = 'NASDAQ:NVDA') {
-            new TradingView.widget({
-                "autosize": true,
-                "symbol": symbol,
-                "interval": "D",
-                "timezone": "America/New_York",
-                "theme": "dark",
-                "style": "1",
-                "locale": "en",
-                "toolbar_bg": "#f1f3f6",
-                "enable_publishing": false,
-                "hide_side_toolbar": false,
-                "allow_symbol_change": true,
-                "container_id": "tradingview_widget"
-            });
-        }
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
-        // GUARDAR TRADE
-        document.getElementById('trade-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const symbol = document.getElementById('symbol').value.toUpperCase();
-            
-            try {
-                await addDoc(collection(db, "trades"), {
-                    symbol: symbol,
-                    entry: document.getElementById('entry').value,
-                    exit: document.getElementById('exit').value,
-                    chart: document.getElementById('chart-url').value,
-                    notes: document.getElementById('notes').value,
-                    timestamp: new Date()
-                });
-                document.getElementById('trade-form').reset();
-                loadChart(symbol);
-            } catch (error) {
-                console.error("Error al guardar:", error);
-            }
-        });
-
-        // LEER TRADES EN TIEMPO REAL
         onSnapshot(query(collection(db, "trades"), orderBy("timestamp", "desc")), (snapshot) => {
-            const list = document.getElementById('trades-list');
-            list.innerHTML = '';
-            snapshot.forEach((doc) => {
-                const trade = doc.data();
-                const profit = trade.exit - trade.entry;
-                const color = profit >= 0 ? 'text-green-400' : 'text-red-400';
-                
-                list.innerHTML += `
-                    <div class="glass p-4 rounded-xl cursor-pointer hover:border-blue-500 transition" onclick="window.loadSpecificChart('${trade.symbol}')">
-                        <div class="flex justify-between font-bold uppercase">
-                            <span>${trade.symbol}</span>
-                            <span class="${color}">${profit.toFixed(2)}$</span>
-                        </div>
-                        <p class="text-xs text-slate-400 truncate mt-1">${trade.notes || 'Sin notas'}</p>
-                    </div>
-                `;
-            });
-        });
+            const tbody = document.getElementById('trades-tbody');
+            tbody.innerHTML = '';
+            
+            let totalPL = 0;
+            let wins = 0;
+            let count = 0;
 
-        window.loadSpecificChart = loadChart;
-        loadChart(); // Carga inicial
+            snapshot.forEach((doc) => {
+                const t = doc.data();
+                const pnl = parseFloat(t.exit) - parseFloat(t.entry);
+                totalPL += pnl;
+                count++;
+                if(pnl > 0) wins++;
+
+                const row = `
+                    <tr class="hover:bg-slate-800 transition">
+                        <td class="rounded-l-lg text-slate-400">${t.timestamp.toDate().toLocaleDateString()}</td>
+                        <td class="font-bold">${t.symbol}</td>
+                        <td><span class="text-blue-400 text-xs">Long</span></td>
+                        <td>$${t.entry}</td>
+                        <td>$${t.exit}</td>
+                        <td class="${pnl >= 0 ? 'text-green-400' : 'text-red-400'} font-mono font-bold">$${pnl.toFixed(2)}</td>
+                        <td><span class="${pnl >= 0 ? 'status-win' : 'status-loss'} text-[10px] font-bold uppercase">${pnl >= 0 ? 'Win' : 'Loss'}</span></td>
+                        <td class="rounded-r-lg text-right"><button class="text-slate-500 hover:text-white"><i class="fas fa-edit"></i></button></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+
+            // Actualizar Stats
+            document.getElementById('stats-pl').innerText = `$${totalPL.toFixed(2)}`;
+            document.getElementById('total-pl-sidebar').innerText = `$${totalPL.toFixed(2)}`;
+            document.getElementById('stats-total').innerText = count;
+            document.getElementById('stats-wr').innerText = count > 0 ? `${((wins/count)*100).toFixed(0)}%` : '0%';
+        });
     </script>
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </body>
 </html>
