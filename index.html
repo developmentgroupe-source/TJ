@@ -3,128 +3,154 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trading Journal — Pro Edition</title>
+<title>Trading Journal Pro</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
 :root{
   --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e28;--bg4:#222736;
-  --border:#2a2f3d;--border2:#363c50;
-  --text:#e8eaf0;--text2:#8b90a0;--text3:#555a6a;
-  --green:#00d4a0;--green-bg:#00d4a015;
-  --red:#ff5566;--red-bg:#ff556610;
-  --blue:#4a9eff;--blue-bg:#4a9eff12;
-  --font-mono:'IBM Plex Mono',monospace;
-  --font-sans:'IBM Plex Sans',sans-serif;
+  --border:#2a2f3d;--text:#e8eaf0;--text2:#8b90a0;--text3:#555a6a;
+  --blue:#4a9eff;--blue-bg:#4a9eff12;--green:#00d4a0;--red:#ff5566;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;font-size:13px}
 .app{display:grid;grid-template-columns:220px 1fr;height:100vh}
 
 /* SIDEBAR */
-.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100}
-.logo{padding:20px;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
-.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
-.nav{padding:12px 0;flex:1}
-.nav-item{display:flex;align-items:center;gap:10px;padding:12px 20px;cursor:pointer;color:var(--text2);font-size:13px;border-left:3px solid transparent;transition:all .15s}
-.nav-item:hover{color:var(--text);background:var(--bg3)}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.nav-item{padding:12px 20px;cursor:pointer;color:var(--text2);border-left:3px solid transparent}
 .nav-item.active{color:var(--blue);border-left-color:var(--blue);background:var(--blue-bg)}
 
 /* MAIN AREA */
-.main{position:relative;display:flex;flex-direction:column;height:100vh;overflow:hidden}
-.topbar{background:var(--bg);border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.main{position:relative;display:flex;flex-direction:column;overflow:hidden}
 .content{padding:24px 28px;overflow-y:auto;flex:1}
 .page{display:none}.page.active{display:block}
 
-/* TRADES TABLE */
-.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:24px}
-.metric{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
-.metric-label{font-size:10px;color:var(--text3);text-transform:uppercase}
-.metric-val{font-family:var(--font-mono);font-size:20px;font-weight:500}
-.trades-table{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
-.trades-table th{padding:12px 16px;text-align:left;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);font-family:var(--font-mono)}
-.trades-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer}
-.trades-table tr:hover{background:var(--bg3)}
+/* FORM STYLES (EXACT MATCH TO IMAGE) */
+.form-container{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:24px}
+.form-row{display:grid;grid-template-columns:repeat(3, 1fr);gap:20px;margin-bottom:20px}
+.form-group{display:flex;flex-direction:column;gap:8px}
+.label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
+.input, .select, .textarea{
+    background:var(--bg3);border:1px solid var(--border);border-radius:4px;
+    color:var(--text);padding:10px;outline:none;font-family:inherit;
+}
+.input:focus{border-color:var(--blue)}
 
-/* ACTIONS */
-.btn-edit{color:var(--blue);margin-right:10px;font-size:11px}
-.btn-delete{color:var(--red);font-size:11px}
-.btn-edit:hover, .btn-delete:hover{text-decoration:underline}
+/* SETUP TAGS */
+.setup-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.tag{
+    padding:4px 10px;background:var(--bg4);border:1px solid var(--border);
+    border-radius:4px;cursor:pointer;font-size:11px;color:var(--text2);
+}
+.tag.selected{background:var(--blue-bg);border-color:var(--blue);color:var(--blue)}
 
-/* FULLSCREEN CHART OVERLAY (BUT INSIDE MAIN) */
+/* FOOTER BUTTONS */
+.form-footer{margin-top:24px;padding-top:20px;border-top:1px solid var(--border);display:flex;gap:12px}
+.btn-save{background:var(--blue);color:white;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-weight:500}
+.btn-cancel{background:transparent;color:var(--text2);border:1px solid var(--border);padding:10px 24px;border-radius:4px;cursor:pointer}
+
+/* TABLE STYLES */
+.trades-table{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border)}
+.trades-table th{padding:12px;text-align:left;color:var(--text3);font-size:10px;border-bottom:1px solid var(--border)}
+.trades-table td{padding:12px;border-bottom:1px solid var(--border);cursor:pointer}
+
 #chart-container-full{display:none;position:absolute;inset:0;background:var(--bg);z-index:50;flex-direction:column}
-.chart-controls{height:45px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border)}
-
-/* FORMS */
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:20px}
-.form-group{display:flex;flex-direction:column;gap:5px}
-.form-input{background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 12px;outline:none}
-.btn-primary{background:var(--blue);color:white;padding:10px;border:none;border-radius:6px;cursor:pointer;font-weight:bold}
-
-.pill-win{color:var(--green);background:var(--green-bg);padding:2px 6px;border-radius:4px;font-size:11px}
-.pill-loss{color:var(--red);background:var(--red-bg);padding:2px 6px;border-radius:4px;font-size:11px}
 </style>
 </head>
 <body>
 
 <div class="app">
     <aside class="sidebar">
-        <div class="logo"><div class="logo-dot"></div>JOURNAL</div>
+        <div style="padding:20px; font-weight:bold; letter-spacing:2px">JOURNAL</div>
         <nav class="nav">
             <div class="nav-item active" onclick="showPage('trades', this)">Mis trades</div>
             <div class="nav-item" onclick="showPage('new', this)">Nuevo trade</div>
-            <div class="nav-item" onclick="showPage('analytics', this)">Analítica</div>
         </nav>
-        <div style="padding:20px; border-top:1px solid var(--border)">
-            <div id="side-pnl" style="font-size:18px; font-family:var(--font-mono)">$0.00</div>
-            <div style="font-size:10px; color:var(--text3)">NET P&L</div>
-        </div>
     </aside>
 
-    <main class="main" id="main-content">
-        <header class="topbar">
-            <div id="page-title" style="font-size:14px; font-weight:500; text-transform:uppercase; letter-spacing:1px">Mis trades</div>
-        </header>
-
+    <main class="main">
         <div class="content">
             <div id="page-trades" class="page active">
-                <div class="metrics-grid">
-                    <div class="metric"><div class="metric-label">Win Rate</div><div id="m-wr" class="metric-val">0%</div></div>
-                    <div class="metric"><div class="metric-label">Net P&L</div><div id="m-pnl" class="metric-val">$0.00</div></div>
-                </div>
                 <table class="trades-table">
-                    <thead><tr><th>Ticker</th><th>Entrada</th><th>Salida</th><th>P&L</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <thead><tr><th>FECHA</th><th>TICKER</th><th>ENTRADA</th><th>SALIDA</th><th>P&L $</th><th>ESTADO</th><th>ACCIONES</th></tr></thead>
                     <tbody id="trades-tbody"></tbody>
                 </table>
             </div>
 
             <div id="page-new" class="page">
-                <div style="background:var(--bg2); border:1px solid var(--border); border-radius:8px; max-width:500px">
+                <div class="form-container">
                     <form id="trade-form">
                         <input type="hidden" id="f-id">
-                        <div class="form-grid">
-                            <div class="form-group"><label class="metric-label">Ticker</label><input type="text" id="f-sym" class="form-input" required></div>
-                            <div class="form-group"><label class="metric-label">Cantidad</label><input type="number" id="f-qty" class="form-input" value="1"></div>
-                            <div class="form-group"><label class="metric-label">Entrada</label><input type="number" step="0.01" id="f-entry" class="form-input" required></div>
-                            <div class="form-group"><label class="metric-label">Salida</label><input type="number" step="0.01" id="f-exit" class="form-input" required></div>
+                        
+                        <div class="form-row">
+                            <div class="form-group"><label class="label">Ticker *</label><input type="text" id="f-sym" class="input" placeholder="GOOGL" required></div>
+                            <div class="form-group">
+                                <label class="label">Dirección *</label>
+                                <select id="f-dir" class="select"><option value="Long">Long</option><option value="Short">Short</option></select>
+                            </div>
                         </div>
-                        <div style="padding:20px; border-top:1px solid var(--border)">
-                            <button type="submit" id="btn-submit" class="btn-primary" style="width:100%">Guardar Trade</button>
+
+                        <div class="form-row">
+                            <div class="form-group"><label class="label">Fecha Entrada</label><input type="date" id="f-date-in" class="input"></div>
+                            <div class="form-group"><label class="label">Hora Entrada</label><input type="time" id="f-time-in" class="input"></div>
+                            <div class="form-group"><label class="label">Precio Entrada *</label><input type="number" step="0.01" id="f-entry" class="input" required></div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group"><label class="label">Fecha Salida</label><input type="date" id="f-date-out" class="input"></div>
+                            <div class="form-group"><label class="label">Hora Salida</label><input type="time" id="f-time-out" class="input"></div>
+                            <div class="form-group"><label class="label">Precio Salida</label><input type="number" step="0.01" id="f-exit" class="input" placeholder="Vacío = Abierto"></div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group"><label class="label">Cantidad *</label><input type="number" id="f-qty" class="input" value="100"></div>
+                            <div class="form-group"><label class="label">Stop Loss</label><input type="number" step="0.01" id="f-sl" class="input"></div>
+                            <div class="form-group"><label class="label">Comisión ($)</label><input type="number" step="0.01" id="f-comm" class="input" value="0"></div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:20px">
+                            <label class="label">Setup</label>
+                            <div class="setup-tags" id="setup-list">
+                                <div class="tag" onclick="toggleTag(this)">Gap & Go</div>
+                                <div class="tag" onclick="toggleTag(this)">Breakout</div>
+                                <div class="tag" onclick="toggleTag(this)">Pullback</div>
+                                <div class="tag" onclick="toggleTag(this)">VWAP</div>
+                                <div class="tag" onclick="toggleTag(this)">Reversal</div>
+                            </div>
+                            <input type="text" id="f-setup-custom" class="input" style="margin-top:10px" placeholder="O escribe tu setup...">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="label">Timeframe</label>
+                                <select id="f-tf" class="select"><option value="1m">1m</option><option value="5m" selected>5m</option><option value="15m">15m</option><option value="1D">1D</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label class="label">Exchange</label>
+                                <select id="f-ex" class="select"><option value="NASDAQ">NASDAQ</option><option value="NYSE">NYSE</option><option value="BINANCE">BINANCE</option></select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="label">Notas / Razón de entrada</label>
+                            <textarea id="f-notes" class="textarea" rows="3" placeholder="¿Qué viste en el chart?"></textarea>
+                        </div>
+
+                        <div class="form-footer">
+                            <button type="submit" id="btn-submit" class="btn-save">Guardar trade</button>
+                            <button type="button" class="btn-cancel" onclick="showPage('trades')">Cancelar</button>
                         </div>
                     </form>
                 </div>
             </div>
-
-            <div id="page-analytics" class="page">
-                <div class="metric">Analítica en desarrollo...</div>
-            </div>
         </div>
 
         <div id="chart-container-full">
-            <div class="chart-controls">
-                <span id="full-chart-title" style="font-family:var(--font-mono); color:var(--blue)"></span>
-                <button onclick="closeChart()" style="background:var(--bg3); border:1px solid var(--border); color:white; padding:4px 12px; cursor:pointer; border-radius:4px">Cerrar Gráfico</button>
+            <div style="padding:10px; background:var(--bg2); display:flex; justify-content:space-between">
+                <span id="chart-title"></span>
+                <button onclick="closeChart()" style="color:white; background:none; border:1px solid var(--border); padding:2px 10px; cursor:pointer">Cerrar</button>
             </div>
-            <div id="tv-full-div" style="flex:1"></div>
+            <div id="tv-div" style="flex:1"></div>
         </div>
     </main>
 </div>
@@ -151,102 +177,79 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);height:
         document.getElementById('page-' + id).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         if(el) el.classList.add('active');
-        document.getElementById('page-title').innerText = id;
-        closeChart();
+        if(id === 'new' && !document.getElementById('f-id').value) {
+            document.getElementById('trade-form').reset();
+            document.querySelectorAll('.tag').forEach(t => t.classList.remove('selected'));
+        }
     };
 
-    window.openChart = (symbol) => {
+    window.toggleTag = (el) => el.classList.toggle('selected');
+
+    window.openChart = (sym) => {
         document.getElementById('chart-container-full').style.display = 'flex';
-        document.getElementById('full-chart-title').innerText = symbol;
-        new TradingView.widget({
-            "autosize": true,
-            "symbol": symbol.includes(':') ? symbol : "NASDAQ:" + symbol,
-            "interval": "D",
-            "theme": "dark",
-            "style": "1",
-            "locale": "es",
-            "container_id": "tv-full-div",
-            "hide_side_toolbar": false
-        });
+        new TradingView.widget({ "autosize": true, "symbol": sym, "interval": "5", "theme": "dark", "container_id": "tv-div" });
     };
+    window.closeChart = () => document.getElementById('chart-container-full').style.display = 'none';
 
-    window.closeChart = () => {
-        document.getElementById('chart-container-full').style.display = 'none';
-    };
-
-    // ELIMINAR
-    window.deleteTrade = async (id, e) => {
-        e.stopPropagation();
-        if(confirm('¿Borrar este trade?')) await deleteDoc(doc(db, "trades", id));
-    };
-
-    // EDITAR (CARGAR EN FORM)
-    window.editTrade = (id, symbol, qty, entry, exit, e) => {
-        e.stopPropagation();
-        document.getElementById('f-id').value = id;
-        document.getElementById('f-sym').value = symbol;
-        document.getElementById('f-qty').value = qty;
-        document.getElementById('f-entry').value = entry;
-        document.getElementById('f-exit').value = exit;
-        document.getElementById('btn-submit').innerText = "Actualizar Trade";
-        showPage('new', document.querySelectorAll('.nav-item')[1]);
-    };
-
-    // GUARDAR O ACTUALIZAR
     document.getElementById('trade-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('f-id').value;
+        const selectedTags = Array.from(document.querySelectorAll('.tag.selected')).map(t => t.innerText);
+        
         const data = {
             symbol: document.getElementById('f-sym').value.toUpperCase(),
-            qty: parseFloat(document.getElementById('f-qty').value),
+            direction: document.getElementById('f-dir').value,
+            dateIn: document.getElementById('f-date-in').value,
+            timeIn: document.getElementById('f-time-in').value,
             entry: parseFloat(document.getElementById('f-entry').value),
-            exit: parseFloat(document.getElementById('f-exit').value),
+            dateOut: document.getElementById('f-date-out').value,
+            timeOut: document.getElementById('f-time-out').value,
+            exit: parseFloat(document.getElementById('f-exit').value) || null,
+            qty: parseFloat(document.getElementById('f-qty').value),
+            sl: parseFloat(document.getElementById('f-sl').value) || null,
+            comm: parseFloat(document.getElementById('f-comm').value) || 0,
+            setup: selectedTags.join(', ') || document.getElementById('f-setup-custom').value,
+            tf: document.getElementById('f-tf').value,
+            exchange: document.getElementById('f-ex').value,
+            notes: document.getElementById('f-notes').value,
             timestamp: new Date()
         };
 
-        if(id) {
-            await updateDoc(doc(db, "trades", id), data);
-        } else {
-            await addDoc(collection(db, "trades"), data);
-        }
-        
-        document.getElementById('trade-form').reset();
-        document.getElementById('f-id').value = "";
-        document.getElementById('btn-submit').innerText = "Guardar Trade";
+        id ? await updateDoc(doc(db, "trades", id), data) : await addDoc(collection(db, "trades"), data);
         showPage('trades', document.querySelectorAll('.nav-item')[0]);
     });
+
+    window.editTrade = (id, data, e) => {
+        e.stopPropagation();
+        document.getElementById('f-id').value = id;
+        document.getElementById('f-sym').value = data.symbol;
+        document.getElementById('f-entry').value = data.entry;
+        document.getElementById('f-exit').value = data.exit || '';
+        document.getElementById('f-qty').value = data.qty;
+        document.getElementById('f-notes').value = data.notes || '';
+        document.getElementById('btn-submit').innerText = "Actualizar Trade";
+        showPage('new');
+    };
 
     onSnapshot(query(collection(db, "trades"), orderBy("timestamp", "desc")), (snap) => {
         const tbody = document.getElementById('trades-tbody');
         tbody.innerHTML = '';
-        let totalPnl = 0, wins = 0, count = 0;
-
         snap.forEach(d => {
             const t = d.data();
-            const pnl = (t.exit - t.entry) * (t.qty || 1);
-            totalPnl += pnl; count++;
-            if(pnl > 0) wins++;
-
+            const pnl = t.exit ? (t.exit - t.entry) * t.qty - t.comm : 0;
             const tr = document.createElement('tr');
             tr.onclick = () => openChart(t.symbol);
             tr.innerHTML = `
+                <td>${t.dateIn || '-'}</td>
                 <td style="font-weight:bold">${t.symbol}</td>
-                <td class="font-mono">${t.entry}</td>
-                <td class="font-mono">${t.exit}</td>
-                <td class="font-mono" style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl.toFixed(2)}</td>
-                <td><span class="${pnl >= 0 ? 'pill-win' : 'pill-loss'}">${pnl >= 0 ? 'WIN' : 'LOSS'}</span></td>
-                <td>
-                    <span class="btn-edit" onclick="editTrade('${d.id}','${t.symbol}',${t.qty},${t.entry},${t.exit}, event)">Edit</span>
-                    <span class="btn-delete" onclick="deleteTrade('${d.id}', event)">Delete</span>
-                </td>
+                <td>${t.entry}</td>
+                <td>${t.exit || 'OPEN'}</td>
+                <td style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl.toFixed(2)}</td>
+                <td>${pnl >= 0 ? 'WIN' : 'LOSS'}</td>
+                <td><span onclick="editTrade('${d.id}', ${JSON.stringify(t).replace(/"/g, '&quot;')}, event)" style="color:var(--blue)">Edit</span></td>
             `;
             tbody.appendChild(tr);
         });
-
-        document.getElementById('m-wr').innerText = count > 0 ? Math.round((wins/count)*100)+'%' : '0%';
-        document.getElementById('m-pnl').innerText = '$' + totalPnl.toFixed(2);
-        document.getElementById('side-pnl').innerText = '$' + totalPnl.toFixed(2);
-        document.getElementById('side-pnl').style.color = totalPnl >= 0 ? 'var(--green)' : 'var(--red)';
     });
 </script>
 </body>
