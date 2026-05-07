@@ -15,57 +15,61 @@
         body { font-family: var(--font-sans); background: var(--bg-main); color: var(--text-main); height: 100vh; overflow: hidden; }
         .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100vh; }
 
-        /* SIDEBAR */
-        .sidebar { background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; z-index: 100; }
-        .logo { padding: 0 24px 30px; font-weight: 700; font-size: 18px; letter-spacing: -0.5px; }
+        /* SIDEBAR - IMAGEN 1 */
+        .sidebar { background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; z-index: 1000; }
+        .logo { padding: 0 24px 30px; font-weight: 700; font-size: 18px; color: #fff; }
         .logo span { color: var(--green); }
-        .nav-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text-dim); transition: 0.2s; font-size: 14px; }
-        .nav-item:hover { background: #ffffff05; color: #fff; }
+        .nav-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text-dim); font-size: 14px; }
         .nav-item.active { color: var(--accent); background: #3b82f610; border-left: 3px solid var(--accent); }
         .sidebar-footer { padding: 20px 24px; border-top: 1px solid var(--border); margin-top: auto; }
 
         /* CONTENT */
         .main-content { display: flex; flex-direction: column; overflow-y: auto; position: relative; }
-        .top-bar { padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); z-index: 10; }
-        .content-area { padding: 0 30px 40px; }
+        .top-bar { padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .content-area { padding: 25px 30px; }
         .page { display: none; }
         .page.active { display: block; }
 
-        /* CARDS */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 25px; }
-        .stat-card { background: var(--bg-card); border: 1px solid var(--border); padding: 18px; border-radius: 6px; }
-        .stat-card label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; display: block; margin-bottom: 8px; }
-        .stat-card .val { font-family: var(--font-mono); font-size: 18px; font-weight: 600; }
+        /* STATS - IMAGEN 1 */
+        .stats-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 25px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); padding: 15px; border-radius: 6px; }
+        .stat-card label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .stat-card .val { font-family: var(--font-mono); font-size: 16px; font-weight: 600; }
 
-        /* TABLE */
+        /* TABLE - IMAGEN 1 */
         .table-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
         .trades-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .trades-table th { background: #1c212d; padding: 12px; text-align: left; color: var(--text-dim); font-size: 10px; }
-        .trades-table td { padding: 14px 12px; border-bottom: 1px solid var(--border); }
+        .trades-table th { background: #1c212d; padding: 12px; text-align: left; color: var(--text-dim); font-size: 10px; text-transform: uppercase; }
+        .trades-table td { padding: 14px 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
         .badge { padding: 3px 8px; border-radius: 3px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
         .badge-win { background: #00d4a020; color: var(--green); }
         .badge-loss { background: #ff556620; color: var(--red); }
 
-        /* FORM */
-        .form-container { background: var(--bg-card); padding: 30px; border-radius: 8px; border: 1px solid var(--border); max-width: 1000px; }
-        .input-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
-        .input-group { display: flex; flex-direction: column; gap: 8px; }
-        .input, .select, .textarea { background: var(--bg-input); border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 4px; outline: none; }
+        /* FORM - IMAGEN 2 Y 4 */
+        .form-container { background: var(--bg-card); padding: 30px; border-radius: 8px; border: 1px solid var(--border); max-width: 1000px; margin: 0 auto; }
+        .form-section-title { font-size: 11px; color: var(--text-dim); margin: 20px 0 15px; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .input-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 15px; }
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-group label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+        .input, .select, .textarea { background: var(--bg-input); border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 4px; outline: none; font-size: 13px; }
         .tag-btn { padding: 6px 12px; background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 4px; cursor: pointer; font-size: 11px; }
-        .tag-btn.active { background: var(--accent); color: white; }
+        .tag-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-        /* TRADE DETAIL VIEW */
+        /* VISTA DETALLE - IMAGEN 5 (FULL SCREEN EXCEPT SIDEBAR) */
         #trade-detail-view {
             position: fixed; top: 0; left: 240px; right: 0; bottom: 0;
-            background: var(--bg-main); z-index: 200; display: none;
+            background: var(--bg-main); z-index: 500; display: none;
             grid-template-columns: 1fr 380px;
         }
-        .detail-main { border-right: 1px solid var(--border); display: flex; flex-direction: column; }
-        .chart-area { flex: 1; background: #000; }
-        .detail-sidebar { padding: 30px; overflow-y: auto; background: var(--bg-sidebar); }
-        .detail-info-block { margin-bottom: 25px; }
-        .detail-info-block label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
-        .detail-info-block p { font-family: var(--font-mono); font-size: 15px; margin-top: 5px; }
+        .detail-main { display: flex; flex-direction: column; border-right: 1px solid var(--border); height: 100vh; }
+        .detail-header { padding: 20px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .detail-chart-container { flex: 1; background: #000; width: 100%; height: 100%; }
+        .detail-sidebar { padding: 30px; overflow-y: auto; background: var(--bg-sidebar); height: 100vh; }
+        .detail-sidebar::-webkit-scrollbar { width: 4px; }
+        .detail-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+        .info-block { margin-bottom: 25px; }
+        .info-block label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .info-block p { font-family: var(--font-mono); font-size: 15px; }
     </style>
 </head>
 <body>
@@ -77,30 +81,36 @@
             <div class="nav-item active" onclick="nav('trades')">Mis trades</div>
             <div class="nav-item" onclick="resetForm(); nav('new-trade')">+ Nuevo trade</div>
             <div class="nav-item" onclick="nav('analytics')">Analítica</div>
+            <div class="nav-item">Importar trades</div>
+            <div class="nav-item">Exportar</div>
         </nav>
         <div class="sidebar-footer">
-            <div id="side-pnl" style="font-family: var(--font-mono); font-size: 18px;">$0.00</div>
-            <div style="font-size: 10px; color: var(--text-dim)">P&L NETO</div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-bottom: 4px;">P&L TOTAL</div>
+            <div id="side-pnl" style="font-family: var(--font-mono); font-size: 18px; color: var(--green);">$0.00</div>
         </div>
     </aside>
 
     <main class="main-content">
         <div class="top-bar">
             <h2 id="page-title">Mis trades</h2>
-            <button class="tag-btn" style="background:var(--accent); color:white" onclick="resetForm(); nav('new-trade')">+ Nuevo Trade</button>
+            <button class="tag-btn" style="background:var(--accent); color:white; border:none; padding:8px 16px" onclick="resetForm(); nav('new-trade')">+ Nuevo Trade</button>
         </div>
 
         <div class="content-area">
             <div id="p-trades" class="page active">
-                <div class="stats-grid" id="stats-summary">
+                <div class="stats-grid">
                     <div class="stat-card"><label>P&L Total</label><div class="val" id="st-pnl">$0.00</div></div>
                     <div class="stat-card"><label>Win Rate</label><div class="val" id="st-wr">0%</div></div>
+                    <div class="stat-card"><label>Profit Factor</label><div class="val" id="st-pf">0.0</div></div>
+                    <div class="stat-card"><label>Avg Win</label><div class="val" id="st-aw">$0.00</div></div>
+                    <div class="stat-card"><label>Avg Loss</label><div class="val" id="st-al">$0.00</div></div>
+                    <div class="stat-card"><label>Open</label><div class="val" id="st-open">0</div></div>
                     <div class="stat-card"><label>Total Trades</label><div class="val" id="st-count">0</div></div>
                 </div>
                 <div class="table-box">
                     <table class="trades-table">
                         <thead>
-                            <tr><th>Fecha</th><th>Ticker</th><th>Dir</th><th>Entrada</th><th>Salida</th><th>P&L $</th><th>Estado</th><th>Acciones</th></tr>
+                            <tr><th>Fecha</th><th>Ticker</th><th>Dir</th><th>Setup</th><th>Entrada</th><th>Salida</th><th>P&L $</th><th>Estado</th></tr>
                         </thead>
                         <tbody id="trades-list"></tbody>
                     </table>
@@ -111,27 +121,46 @@
                 <div class="form-container">
                     <form id="trade-form">
                         <input type="hidden" id="f-id">
+                        <div class="form-section-title">Información del Activo</div>
                         <div class="input-row">
-                            <div class="input-group"><label>Ticker *</label><input type="text" id="f-ticker" class="input" required></div>
+                            <div class="input-group"><label>Ticker *</label><input type="text" id="f-ticker" class="input" placeholder="GOOGL" required></div>
                             <div class="input-group"><label>Dirección</label><select id="f-dir" class="select"><option>Long</option><option>Short</option></select></div>
                             <div class="input-group"><label>Cantidad</label><input type="number" id="f-qty" class="input" value="100"></div>
                         </div>
+                        <div class="form-section-title">Ejecución</div>
                         <div class="input-row">
-                            <div class="input-group"><label>Precio Entrada</label><input type="number" step="any" id="f-p-in" class="input" required></div>
-                            <div class="input-group"><label>Precio Salida</label><input type="number" step="any" id="f-p-out" class="input"></div>
-                            <div class="input-group"><label>Comisión</label><input type="number" step="any" id="f-comm" class="input" value="0"></div>
+                            <div class="input-group"><label>Fecha Entrada</label><input type="date" id="f-date-in" class="input"></div>
+                            <div class="input-group"><label>Hora Entrada</label><input type="time" id="f-time-in" class="input"></div>
+                            <div class="input-group"><label>Precio Entrada *</label><input type="number" step="any" id="f-p-in" class="input" required></div>
                         </div>
-                        <div class="input-group"><label>Setups</label>
+                        <div class="input-row">
+                            <div class="input-group"><label>Fecha Salida</label><input type="date" id="f-date-out" class="input"></div>
+                            <div class="input-group"><label>Hora Salida</label><input type="time" id="f-time-out" class="input"></div>
+                            <div class="input-group"><label>Precio Salida</label><input type="number" step="any" id="f-p-out" class="input"></div>
+                        </div>
+                        <div class="form-section-title">Gestión y Detalles</div>
+                        <div class="input-row">
+                            <div class="input-group"><label>Stop Loss</label><input type="number" step="any" id="f-sl" class="input"></div>
+                            <div class="input-group"><label>Comisión ($)</label><input type="number" step="any" id="f-comm" class="input" value="0"></div>
+                            <div class="input-group"><label>Timeframe</label><select id="f-tf" class="select"><option>1m</option><option selected>5m</option><option>15m</option><option>1h</option><option>D</option></select></div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group"><label>Exchange</label><select id="f-ex" class="select"><option>NASDAQ</option><option>NYSE</option><option>BINANCE</option><option>CME</option></select></div>
+                        </div>
+                        <div class="input-group" style="margin-top:10px">
+                            <label>Setup</label>
                             <div class="tag-row" id="setup-tags">
                                 <button type="button" class="tag-btn" onclick="this.classList.toggle('active')">Gap & Go</button>
                                 <button type="button" class="tag-btn" onclick="this.classList.toggle('active')">Breakout</button>
                                 <button type="button" class="tag-btn" onclick="this.classList.toggle('active')">Pullback</button>
+                                <button type="button" class="tag-btn" onclick="this.classList.toggle('active')">VWAP</button>
                             </div>
                         </div>
-                        <div class="input-group" style="margin-top:20px"><label>Notas</label><textarea id="f-notes" class="textarea" rows="4"></textarea></div>
-                        <div style="margin-top:25px; display:flex; gap:10px">
-                            <button type="submit" class="tag-btn" style="background:var(--accent); color:white; padding:10px 30px" id="btn-save">Guardar Trade</button>
-                            <button type="button" class="tag-btn" onclick="nav('trades')">Cancelar</button>
+                        <div class="input-group" style="margin-top:20px"><label>Notas</label><textarea id="f-notes" class="textarea" rows="3"></textarea></div>
+                        <div class="input-group" style="margin-top:15px"><label>Lecciones</label><textarea id="f-lessons" class="textarea" rows="2"></textarea></div>
+                        <div style="margin-top:30px; display:flex; gap:12px">
+                            <button type="submit" class="tag-btn" style="background:var(--accent); color:white; padding:12px 40px; font-weight:600" id="btn-save">GUARDAR</button>
+                            <button type="button" class="tag-btn" onclick="nav('trades')" style="padding:12px 40px">CANCELAR</button>
                         </div>
                     </form>
                 </div>
@@ -140,20 +169,32 @@
 
         <div id="trade-detail-view">
             <div class="detail-main">
-                <div style="padding:15px 25px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
-                    <h3 id="det-ticker-title">TRADE DETAIL</h3>
-                    <button class="tag-btn" onclick="closeDetail()">Cerrar</button>
+                <div class="detail-header">
+                    <div>
+                        <h2 id="det-title" style="font-size:18px">TICKER — DIRECCIÓN</h2>
+                        <span id="det-meta" style="font-size:11px; color:var(--text-dim)"></span>
+                    </div>
+                    <button class="tag-btn" onclick="closeDetail()">✕ CERRAR</button>
                 </div>
-                <div class="chart-area" id="tv-widget"></div>
+                <div class="detail-chart-container" id="tv-widget-full">
+                    </div>
             </div>
             <aside class="detail-sidebar">
-                <div style="margin-bottom:30px; display:flex; gap:10px">
-                    <button class="tag-btn" id="btn-edit-action" style="flex:1">Editar</button>
-                    <button class="tag-btn" id="btn-delete-action" style="flex:1; border-color:var(--red); color:var(--red)">Eliminar</button>
+                <div style="display:flex; gap:10px; margin-bottom:30px">
+                    <button class="tag-btn" id="det-edit-btn" style="flex:1; background:var(--accent); color:white">EDITAR</button>
+                    <button class="tag-btn" id="det-del-btn" style="flex:1; border-color:var(--red); color:var(--red)">ELIMINAR</button>
                 </div>
-                <div class="detail-info-block"><label>P&L Realizado</label><p id="det-pnl" style="font-size:24px"></p></div>
-                <div class="detail-info-block"><label>Entrada / Salida</label><p id="det-prices"></p></div>
-                <div class="detail-info-block" style="border:none"><label>Notas</label><p id="det-notes" style="font-family:var(--font-sans); color:var(--text-dim); line-height:1.6"></p></div>
+                <div class="info-block"><label>P&L NETO</label><p id="det-pnl" style="font-size:24px"></p></div>
+                <div class="info-block"><label>Ejecución</label><p id="det-exec"></p></div>
+                <div class="info-block"><label>Setup</label><p id="det-setup"></p></div>
+                <div class="info-block" style="border-top:1px solid var(--border); padding-top:15px">
+                    <label>Notas de Entrada</label>
+                    <p id="det-notes" style="font-family:var(--font-sans); color:var(--text-dim); font-size:13px; line-height:1.6"></p>
+                </div>
+                <div class="info-block">
+                    <label>Lecciones</label>
+                    <p id="det-lessons" style="font-family:var(--font-sans); color:var(--green); font-size:13px; font-style:italic"></p>
+                </div>
             </aside>
         </div>
     </main>
@@ -175,112 +216,74 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    let currentTrades = [];
+    let allTrades = [];
 
-    // NAVEGACION
     window.nav = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById('p-' + id).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('page-title').innerText = id === 'trades' ? 'Mis trades' : (id === 'new-trade' ? 'Nuevo Trade' : 'Analítica');
+        document.getElementById('page-title').innerText = id === 'trades' ? 'Mis trades' : 'Nuevo Trade';
     };
 
     window.resetForm = () => {
         document.getElementById('trade-form').reset();
         document.getElementById('f-id').value = "";
-        document.getElementById('btn-save').innerText = "Guardar Trade";
         document.querySelectorAll('#setup-tags .tag-btn').forEach(b => b.classList.remove('active'));
     };
 
-    // GUARDAR / ACTUALIZAR
     document.getElementById('trade-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('f-id').value;
         const tags = Array.from(document.querySelectorAll('#setup-tags .tag-btn.active')).map(b => b.innerText);
-        
         const data = {
             ticker: document.getElementById('f-ticker').value.toUpperCase(),
             dir: document.getElementById('f-dir').value,
             qty: parseFloat(document.getElementById('f-qty').value),
+            dateIn: document.getElementById('f-date-in').value,
             pIn: parseFloat(document.getElementById('f-p-in').value),
             pOut: parseFloat(document.getElementById('f-p-out').value) || null,
-            comm: parseFloat(document.getElementById('f-comm').value) || 0,
+            tf: document.getElementById('f-tf').value,
+            ex: document.getElementById('f-ex').value,
             notes: document.getElementById('f-notes').value,
+            lessons: document.getElementById('f-lessons').value,
             setups: tags,
             timestamp: new Date()
         };
-
         id ? await updateDoc(doc(db, "trades", id), data) : await addDoc(collection(db, "trades"), data);
         nav('trades');
     });
 
-    // ESCUCHAR DATOS
     onSnapshot(query(collection(db, "trades"), orderBy("timestamp", "desc")), (snap) => {
         const list = document.getElementById('trades-list');
         list.innerHTML = "";
         let totalPnl = 0, wins = 0;
-        currentTrades = [];
-
+        allTrades = [];
         snap.forEach(d => {
             const t = { id: d.id, ...d.data() };
-            currentTrades.push(t);
-            const pnl = t.pOut ? (t.dir === 'Long' ? (t.pOut - t.pIn) : (t.pIn - t.pOut)) * t.qty - t.comm : 0;
-            totalPnl += pnl;
-            if(pnl > 0) wins++;
-
+            allTrades.push(t);
+            const pnl = t.pOut ? (t.dir === 'Long' ? (t.pOut - t.pIn) : (t.pIn - t.pOut)) * t.qty : 0;
+            totalPnl += pnl; if(pnl > 0) wins++;
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="color:var(--text-dim)">${t.timestamp.toDate().toLocaleDateString()}</td>
-                <td style="font-weight:700">${t.ticker}</td>
-                <td><span class="badge" style="border:1px solid ${t.dir==='Long'?'var(--green)':'var(--red)'}">${t.dir}</span></td>
-                <td>$${t.pIn}</td>
-                <td>${t.pOut ? '$'+t.pOut : 'OPEN'}</td>
-                <td style="color:${pnl>=0?'var(--green)':'var(--red)'}">${pnl>=0?'+':''}${pnl.toFixed(2)}</td>
-                <td><span class="badge ${pnl>=0?'badge-win':'badge-loss'}">${pnl>=0?'Win':'Loss'}</span></td>
-                <td><button class="tag-btn" onclick="event.stopPropagation(); loadEdit('${t.id}')">Edit</button></td>
-            `;
+            tr.innerHTML = `<td>${t.dateIn}</td><td>${t.ticker}</td><td>${t.dir}</td><td>${t.setups?.join(', ') || '-'}</td><td>$${t.pIn}</td><td>${t.pOut?'$'+t.pOut:'OPEN'}</td><td style="color:${pnl>=0?'var(--green)':'var(--red)'}">${pnl.toFixed(2)}</td><td><span class="badge ${pnl>=0?'badge-win':'badge-loss'}">${t.pOut?(pnl>=0?'Win':'Loss'):'Open'}</span></td>`;
             tr.onclick = () => openDetail(t);
             list.appendChild(tr);
         });
-
         document.getElementById('st-pnl').innerText = `$${totalPnl.toFixed(2)}`;
         document.getElementById('side-pnl').innerText = `$${totalPnl.toFixed(2)}`;
-        document.getElementById('st-count').innerText = currentTrades.length;
-        document.getElementById('st-wr').innerText = currentTrades.length ? Math.round((wins/currentTrades.length)*100)+'%' : '0%';
+        document.getElementById('st-count').innerText = allTrades.length;
+        document.getElementById('st-wr').innerText = allTrades.length ? Math.round((wins/allTrades.length)*100)+'%' : '0%';
     });
 
-    // DETALLE Y TRADINGVIEW
     window.openDetail = (t) => {
         document.getElementById('trade-detail-view').style.display = 'grid';
-        document.getElementById('det-ticker-title').innerText = `${t.ticker} — ${t.dir}`;
-        const pnl = t.pOut ? (t.dir === 'Long' ? (t.pOut - t.pIn) : (t.pIn - t.pOut)) * t.qty - t.comm : 0;
+        document.getElementById('det-title').innerText = `${t.ticker} — ${t.dir}`;
+        const pnl = t.pOut ? (t.dir === 'Long' ? (t.pOut - t.pIn) : (t.pIn - t.pOut)) * t.qty : 0;
         document.getElementById('det-pnl').innerText = `$${pnl.toFixed(2)}`;
-        document.getElementById('det-pnl').style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
-        document.getElementById('det-prices').innerText = `$${t.pIn} → ${t.pOut || 'Abierto'}`;
-        document.getElementById('det-notes').innerText = t.notes || "Sin notas.";
-        
-        new TradingView.widget({
-            "autosize": true, "symbol": t.ticker, "interval": "5", "theme": "dark", "container_id": "tv-widget", "style": "1"
-        });
-
-        document.getElementById('btn-delete-action').onclick = async () => {
-            if(confirm("¿Borrar trade?")) { await deleteDoc(doc(db, "trades", t.id)); closeDetail(); }
-        };
-        document.getElementById('btn-edit-action').onclick = () => { closeDetail(); loadEdit(t.id); };
-    };
-
-    window.loadEdit = (id) => {
-        const t = currentTrades.find(x => x.id === id);
-        nav('new-trade');
-        document.getElementById('f-id').value = t.id;
-        document.getElementById('f-ticker').value = t.ticker;
-        document.getElementById('f-dir').value = t.dir;
-        document.getElementById('f-qty').value = t.qty;
-        document.getElementById('f-p-in').value = t.pIn;
-        document.getElementById('f-p-out').value = t.pOut || "";
-        document.getElementById('f-comm').value = t.comm;
-        document.getElementById('f-notes').value = t.notes;
-        document.getElementById('btn-save').innerText = "Actualizar Trade";
+        document.getElementById('det-exec').innerText = `$${t.pIn} → ${t.pOut || 'Abierto'}`;
+        document.getElementById('det-notes').innerText = t.notes;
+        document.getElementById('det-lessons').innerText = t.lessons;
+        new TradingView.widget({"autosize": true, "symbol": t.ticker, "interval": t.tf, "theme": "dark", "container_id": "tv-widget-full"});
+        document.getElementById('det-del-btn').onclick = async () => { if(confirm("¿Borrar?")) { await deleteDoc(doc(db, "trades", t.id)); closeDetail(); } };
     };
 
     window.closeDetail = () => document.getElementById('trade-detail-view').style.display = 'none';
