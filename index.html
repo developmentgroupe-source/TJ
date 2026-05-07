@@ -2,174 +2,130 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Journal Pro | Netlify Edition</title>
+    <title>Trading Journal Pro</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
-        :root {
-            --bg: #0b0e14; --panel: #151921; --border: #242933;
-            --text: #d1d4dc; --accent: #2962ff; --green: #089981; --red: #f23645;
-        }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Sidebar */
-        .sidebar { width: 300px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
-        .trade-item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+        :root { --bg: #0b0e14; --panel: #151921; --border: #242933; --text: #d1d4dc; --accent: #2962ff; --green: #089981; --red: #f23645; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; display: flex; height: 100vh; }
+        .sidebar { width: 300px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
+        .main { flex: 1; display: flex; flex-direction: column; }
+        #chart { flex: 1; margin: 20px; background: #000; border-radius: 8px; border: 1px solid var(--border); }
+        input, select { background: #1e222d; border: 1px solid var(--border); color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        .btn { background: var(--accent); color: white; border: none; padding: 10px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .trade-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 14px; }
         .trade-item:hover { background: #1e222d; }
-        .trade-item.active { border-left: 4px solid var(--accent); background: #1e222d; }
-
-        /* Main Content */
-        .main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-        .header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        #chart-container { height: 500px; margin: 20px; background: var(--panel); border-radius: 8px; border: 1px solid var(--border); }
-        
-        /* Edge Analysis Cards */
-        .edge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
-        .card { background: var(--panel); padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
-        
-        /* UI Elements */
-        .btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-        .input-group { padding: 20px; border-bottom: 1px solid var(--border); }
-        input { background: var(--bg); border: 1px solid var(--border); color: white; padding: 8px; width: 100%; box-sizing: border-box; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <div class="input-group">
-        <h3 style="margin-top:0">Configuración</h3>
-        <input type="password" id="td-key" placeholder="Twelve Data API Key" style="margin-bottom:10px">
-        <button class="btn" style="width:100%" onclick="saveConfig()">Guardar Configuración</button>
-    </div>
-    <div id="trade-list" style="overflow-y:auto; flex:1">
-        </div>
-    <button class="btn" style="margin:20px" onclick="addNewTrade()">+ Nuevo Trade</button>
+    <h3>Configuración</h3>
+    <input type="password" id="api-key" placeholder="Pega tu Twelve Data API Key">
+    <button class="btn" onclick="saveKey()">Guardar API Key</button>
+    <hr style="width:100%; border:0; border-top:1px solid var(--border); margin: 20px 0;">
+    
+    <h3>Nuevo Trade</h3>
+    <input type="text" id="t-sym" placeholder="Símbolo (AAPL, BTC/USD)">
+    <input type="date" id="t-date">
+    <select id="t-side"><option value="buy">BUY (Largo)</option><option value="sell">SELL (Corto)</option></select>
+    <button class="btn" style="background:var(--green)" onclick="addTrade()">+ Añadir y Ver</button>
+
+    <div id="list" style="margin-top:20px; overflow-y:auto"></div>
 </div>
 
 <div class="main">
-    <div class="header">
-        <h2 id="view-title">Dashboard</h2>
-        <div id="stats">Win Rate: 0%</div>
-    </div>
-    
-    <div id="chart-container"></div>
-
-    <div class="edge-grid">
-        <div class="card">
-            <h4 style="color:var(--accent)">Análisis del Edge (IA)</h4>
-            <p id="edge-text" style="font-size:14px; line-height:1.6">Añade trades para que la IA identifique tu ventaja técnica.</p>
-        </div>
-        <div class="card">
-            <h4 style="color:var(--red)">Sugerencia Psicología</h4>
-            <p id="psych-text" style="font-size:14px; line-height:1.6">Analizando sesgos emocionales...</p>
-        </div>
-    </div>
+    <div id="chart"></div>
 </div>
 
 <script>
-    let trades = JSON.parse(localStorage.getItem('nt_trades') || '[]');
-    let chart = null;
-    let candleSeries = null;
+    let trades = JSON.parse(localStorage.getItem('my_trades') || '[]');
+    let chart, candleSeries;
 
-    // --- LÓGICA DE INICIO ---
-    window.onload = () => {
-        const savedKey = localStorage.getItem('nt_td_key');
-        if(savedKey) document.getElementById('td-key').value = savedKey;
-        renderTradeList();
-        initChart();
-    };
-
-    function saveConfig() {
-        const key = document.getElementById('td-key').value;
-        localStorage.setItem('nt_td_key', key);
-        alert("Configuración guardada en Netlify");
-    }
-
-    function initChart() {
-        const container = document.getElementById('chart-container');
+    // Iniciar Gráfico
+    function init() {
+        const container = document.getElementById('chart');
         chart = LightweightCharts.createChart(container, {
-            layout: { background: { color: '#151921' }, textColor: '#d1d4dc' },
-            grid: { vertLines: { color: '#242933' }, horzLines: { color: '#242933' } },
+            layout: { background: { color: '#000000' }, textColor: '#d1d4dc' },
+            grid: { vertLines: { color: '#1e222d' }, horzLines: { color: '#1e222d' } },
             timeScale: { timeVisible: true }
         });
-        candleSeries = chart.addCandlestickSeries({
-            upColor: '#089981', downColor: '#f23645', borderVisible: false,
-            wickUpColor: '#089981', wickDownColor: '#f23645',
-        });
+        candleSeries = chart.addCandlestickSeries();
+        
+        const savedKey = localStorage.getItem('td_key');
+        if(savedKey) document.getElementById('api-key').value = savedKey;
+        renderList();
+        
+        // Fecha por defecto hoy
+        document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
     }
 
-    // --- GESTIÓN DE TRADES ---
-    function addNewTrade() {
-        const sym = prompt("Símbolo (ej: AAPL):", "AAPL");
-        if(!sym) return;
-        
-        const newTrade = {
-            id: Date.now(),
-            sym: sym.toUpperCase(),
-            edate: new Date().toISOString().split('T')[0],
-            etime: "15:30",
-            eprice: 0,
-            pnl: 0,
-            side: "BUY"
-        };
-        
+    function saveKey() {
+        localStorage.setItem('td_key', document.getElementById('api-key').value);
+        alert("API Key Guardada ✓");
+    }
+
+    async function addTrade() {
+        const sym = document.getElementById('t-sym').value.toUpperCase();
+        const date = document.getElementById('t-date').value;
+        const side = document.getElementById('t-side').value;
+        const key = localStorage.getItem('td_key');
+
+        if(!sym || !key) return alert("Falta símbolo o API Key");
+
+        const newTrade = { sym, date, side, id: Date.now() };
         trades.unshift(newTrade);
-        localStorage.setItem('nt_trades', JSON.stringify(trades));
-        renderTradeList();
+        localStorage.setItem('my_trades', JSON.stringify(trades));
+        renderList();
+        loadChart(newTrade);
     }
 
-    function renderTradeList() {
-        const list = document.getElementById('trade-list');
-        list.innerHTML = '';
-        trades.forEach(t => {
-            const div = document.createElement('div');
-            div.className = 'trade-item';
-            div.innerHTML = `
-                <div style="display:flex; justify-content:space-between">
-                    <b>${t.sym}</b>
-                    <span style="color:${t.pnl >=0 ? 'var(--green)' : 'var(--red)'}">${t.pnl}$</span>
-                </div>
-                <div style="font-size:12px; color:#848e9c">${t.edate} | ${t.side}</div>
-            `;
-            div.onclick = () => loadTrade(t);
-            list.appendChild(div);
-        });
-        updateEdgeAnalysis();
-    }
-
-    async function loadTrade(trade) {
-        document.getElementById('view-title').textContent = `${trade.sym} - ${trade.edate}`;
-        const key = localStorage.getItem('nt_td_key');
-        if(!key) return alert("Falta API Key de Twelve Data");
-
-        try {
-            const res = await fetch(`https://api.twelvedata.com/time_series?symbol=${trade.sym}&interval=5min&apikey=${key}&outputsize=200`);
-            const data = await res.json();
-            
-            if(data.values) {
-                const formatted = data.values.map(v => ({
-                    time: new Date(v.datetime).getTime() / 1000,
-                    open: parseFloat(v.open), high: parseFloat(v.high),
-                    low: parseFloat(v.low), close: parseFloat(v.close)
-                })).sort((a,b) => a.time - b.time);
-                
-                candleSeries.setData(formatted);
-                chart.timeScale().fitContent();
-            }
-        } catch(e) { console.error(e); }
-    }
-
-    function updateEdgeAnalysis() {
-        if(trades.length < 3) return;
+    async function loadChart(trade) {
+        const key = localStorage.getItem('td_key');
+        // Pedimos datos de 1 hora para ver el trade con detalle
+        const url = `https://api.twelvedata.com/time_series?symbol=${trade.sym}&interval=1h&apikey=${key}&outputsize=100`;
         
-        const wins = trades.filter(t => t.pnl > 0).length;
-        const wr = ((wins / trades.length) * 100).toFixed(1);
-        document.getElementById('stats').textContent = `Win Rate: ${wr}%`;
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            if(data.status === "error") throw new Error(data.message);
 
-        // Simulación de IA (En Netlify Functions puedes conectar GPT-4)
-        document.getElementById('edge-text').textContent = "Tu mayor rentabilidad ocurre en la primera hora de mercado. Tu 'Edge' técnico está en la recuperación de niveles VAP.";
-        document.getElementById('psych-text').textContent = "Cuidado: Los trades de los viernes tienden a ser impulsivos. Mantén tu plan.";
+            const bars = data.values.map(v => ({
+                time: new Date(v.datetime).getTime() / 1000,
+                open: parseFloat(v.open), high: parseFloat(v.high),
+                low: parseFloat(v.low), close: parseFloat(v.close)
+            })).sort((a,b) => a.time - b.time);
+
+            candleSeries.setData(bars);
+            
+            // Poner flecha en la fecha del trade
+            const tradeTs = new Date(trade.date).getTime() / 1000;
+            candleSeries.setMarkers([{
+                time: tradeTs,
+                position: trade.side === 'buy' ? 'belowBar' : 'aboveBar',
+                color: trade.side === 'buy' ? '#089981' : '#f23645',
+                shape: trade.side === 'buy' ? 'arrowUp' : 'arrowDown',
+                text: trade.side.toUpperCase()
+            }]);
+
+            chart.timeScale().fitContent();
+        } catch(e) {
+            alert("Error: " + e.message);
+        }
     }
+
+    function renderList() {
+        const container = document.getElementById('list');
+        container.innerHTML = '<b>Trades Guardados:</b>';
+        trades.forEach(t => {
+            const d = document.createElement('div');
+            d.className = 'trade-item';
+            d.innerHTML = `<b>${t.sym}</b> - ${t.date} (${t.side})`;
+            d.onclick = () => loadChart(t);
+            container.appendChild(d);
+        });
+    }
+
+    init();
 </script>
 </body>
 </html>
