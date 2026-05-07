@@ -38,19 +38,27 @@
 <div class="main"><div id="chart"></div></div>
 
 <script>
-    // PEGA TU CLAVE AQUÍ ABAJO
-    const API_KEY = "f555d5dc66dc44e19c96376985c8da49"; 
+    // === CONFIGURACIÓN ===
+    const API_KEY = "f555d5dc66dc44e19c96376985c8da49"; // REEMPLAZA ESTO CON TU CLAVE REAL
+    // =====================
 
-    let trades = JSON.parse(localStorage.getItem('journal_v5_data') || '[]');
-    let chart, candleSeries;
+    let trades = JSON.parse(localStorage.getItem('journal_v6_data') || '[]');
+    
+    // Inicialización inmediata del gráfico para evitar el error de 'undefined'
+    const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+        layout: { background: { color: '#000000' }, textColor: '#d1d4dc' },
+        grid: { vertLines: { color: '#131722' }, horzLines: { color: '#131722' } },
+        timeScale: { timeVisible: true }
+    });
+    const candleSeries = chart.addCandlestickSeries({ 
+        upColor: '#089981', 
+        downColor: '#f23645',
+        borderVisible: false,
+        wickUpColor: '#089981',
+        wickDownColor: '#f23645'
+    });
 
     function init() {
-        chart = LightweightCharts.createChart(document.getElementById('chart'), {
-            layout: { background: { color: '#000000' }, textColor: '#d1d4dc' },
-            grid: { vertLines: { color: '#131722' }, horzLines: { color: '#131722' } },
-            timeScale: { timeVisible: true }
-        });
-        candleSeries = chart.addCandlestickSeries({ upColor: '#089981', downColor: '#f23645' });
         document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
         renderList();
     }
@@ -63,32 +71,45 @@
 
         const newTrade = { sym, date, side, id: Date.now() };
         trades.unshift(newTrade);
-        localStorage.setItem('journal_v5_data', JSON.stringify(trades));
+        localStorage.setItem('journal_v6_data', JSON.stringify(trades));
         renderList();
         loadChart(newTrade);
     }
 
     async function loadChart(trade) {
+        if (!candleSeries) return; // Seguridad extra
+        
         try {
-            const res = await fetch(`https://api.twelvedata.com/time_series?symbol=${trade.sym}&interval=1h&apikey=${API_KEY}&outputsize=100&order=ASC`);
+            const url = `https://api.twelvedata.com/time_series?symbol=${trade.sym}&interval=1h&apikey=${API_KEY}&outputsize=100&order=ASC`;
+            const res = await fetch(url);
             const data = await res.json();
+            
             if(data.status === "error") throw new Error(data.message);
 
             const bars = data.values.map(v => ({
                 time: new Date(v.datetime).getTime() / 1000,
-                open: parseFloat(v.open), high: parseFloat(v.high), low: parseFloat(v.low), close: parseFloat(v.close)
+                open: parseFloat(v.open), 
+                high: parseFloat(v.high), 
+                low: parseFloat(v.low), 
+                close: parseFloat(v.close)
             }));
+            
             candleSeries.setData(bars);
             
+            // Marcador de entrada
+            const tradeTs = new Date(trade.date).getTime() / 1000;
             candleSeries.setMarkers([{
-                time: new Date(trade.date).getTime() / 1000,
+                time: tradeTs,
                 position: trade.side === 'buy' ? 'belowBar' : 'aboveBar',
                 color: trade.side === 'buy' ? '#089981' : '#f23645',
                 shape: trade.side === 'buy' ? 'arrowUp' : 'arrowDown',
-                text: 'ENTRY'
+                text: 'ENTRADA'
             }]);
+
             chart.timeScale().fitContent();
-        } catch(e) { alert("Error: " + e.message); }
+        } catch(e) { 
+            alert("Error: " + e.message); 
+        }
     }
 
     function renderList() {
@@ -102,6 +123,10 @@
             container.appendChild(d);
         });
     }
+
+    window.addEventListener('resize', () => {
+        chart.applyOptions({ width: document.getElementById('chart').clientWidth });
+    });
 
     init();
 </script>
