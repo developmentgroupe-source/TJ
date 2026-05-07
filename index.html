@@ -9,58 +9,45 @@
         body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 300px; background: var(--panel); border-right: 1px solid var(--border); padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; }
         .main { flex: 1; display: flex; flex-direction: column; }
-        #chart { flex: 1; background: #000; margin: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        #chart { flex: 1; background: #000; margin: 15px; border-radius: 8px; border: 1px solid var(--border); position: relative; }
         input, select { background: #1e222d; border: 1px solid var(--border); color: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
         .btn { background: var(--accent); color: white; border: none; padding: 12px; cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%; }
         .trade-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; background: #1c212b; margin-bottom: 8px; border-radius: 6px; }
-        .status { font-size: 12px; margin-bottom: 15px; padding: 10px; border-radius: 6px; background: #000; text-align: center; color: var(--green); border: 1px solid var(--green); }
+        #debug-msg { font-size: 11px; color: #ffb340; margin-top: 10px; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
     <h2 style="color:var(--accent); margin:0 0 15px 0;">Journal Pro</h2>
-    <div class="status">● SISTEMA LISTO</div>
     
-    <input type="text" id="t-sym" placeholder="Símbolo (BTC/USD, AAPL)">
+    <input type="text" id="t-sym" placeholder="Símbolo (AAPL, BTC/USD)">
     <input type="date" id="t-date">
-    <select id="t-side">
-        <option value="buy">LONG (Compra)</option>
-        <option value="sell">SHORT (Venta)</option>
-    </select>
-    <button class="btn" onclick="addTrade()">Añadir Trade</button>
+    <select id="t-side"><option value="buy">BUY</option><option value="sell">SELL</option></select>
+    <button class="btn" onclick="addTrade()">Ver en Gráfico</button>
 
-    <div style="margin-top:20px; overflow-y:auto; flex:1">
-        <div id="list"></div>
-    </div>
+    <div id="debug-msg">Esperando acción...</div>
+
+    <div style="margin-top:20px; overflow-y:auto; flex:1"><div id="list"></div></div>
 </div>
 
 <div class="main"><div id="chart"></div></div>
 
 <script>
-    // === CONFIGURACIÓN ===
-    const API_KEY = "f555d5dc66dc44e19c96376985c8da49"; // REEMPLAZA ESTO CON TU CLAVE REAL
-    // =====================
+    const API_KEY = "f555d5dc66dc44e19c96376985c8da49"; // REEMPLAZA ESTO
 
-    let trades = JSON.parse(localStorage.getItem('journal_v6_data') || '[]');
-    
-    // Inicialización inmediata del gráfico para evitar el error de 'undefined'
+    let trades = JSON.parse(localStorage.getItem('journal_v7') || '[]');
     const chart = LightweightCharts.createChart(document.getElementById('chart'), {
         layout: { background: { color: '#000000' }, textColor: '#d1d4dc' },
         grid: { vertLines: { color: '#131722' }, horzLines: { color: '#131722' } },
-        timeScale: { timeVisible: true }
+        timeScale: { timeVisible: true, borderVisible: false }
     });
-    const candleSeries = chart.addCandlestickSeries({ 
-        upColor: '#089981', 
-        downColor: '#f23645',
-        borderVisible: false,
-        wickUpColor: '#089981',
-        wickDownColor: '#f23645'
-    });
+    const candleSeries = chart.addCandlestickSeries({ upColor: '#089981', downColor: '#f23645' });
 
-    function init() {
-        document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
-        renderList();
+    function setDebug(msg, color = "#ffb340") {
+        const el = document.getElementById('debug-msg');
+        el.innerText = msg;
+        el.style.color = color;
     }
 
     async function addTrade() {
@@ -71,23 +58,33 @@
 
         const newTrade = { sym, date, side, id: Date.now() };
         trades.unshift(newTrade);
-        localStorage.setItem('journal_v6_data', JSON.stringify(trades));
+        localStorage.setItem('journal_v7', JSON.stringify(trades));
         renderList();
         loadChart(newTrade);
     }
 
     async function loadChart(trade) {
-        if (!candleSeries) return; // Seguridad extra
+        setDebug(`Consultando ${trade.sym}...`);
+        
+        // Usamos intervalo diario para asegurar que haya datos históricos
+        const url = `https://api.twelvedata.com/time_series?symbol=${trade.sym}&interval=1day&apikey=${API_KEY}&outputsize=150&order=ASC`;
         
         try {
-            const url = `https://api.twelvedata.com/time_series?symbol=${trade.sym}&interval=1h&apikey=${API_KEY}&outputsize=100&order=ASC`;
             const res = await fetch(url);
             const data = await res.json();
             
-            if(data.status === "error") throw new Error(data.message);
+            if(data.status === "error") {
+                setDebug(`Error: ${data.message}`, "#f23645");
+                return;
+            }
+
+            if(!data.values || data.values.length === 0) {
+                setDebug("La API no devolvió velas para este símbolo.", "#f23645");
+                return;
+            }
 
             const bars = data.values.map(v => ({
-                time: new Date(v.datetime).getTime() / 1000,
+                time: v.datetime, // Twelve Data devuelve YYYY-MM-DD para diario
                 open: parseFloat(v.open), 
                 high: parseFloat(v.high), 
                 low: parseFloat(v.low), 
@@ -97,18 +94,19 @@
             candleSeries.setData(bars);
             
             // Marcador de entrada
-            const tradeTs = new Date(trade.date).getTime() / 1000;
             candleSeries.setMarkers([{
-                time: tradeTs,
+                time: trade.date,
                 position: trade.side === 'buy' ? 'belowBar' : 'aboveBar',
                 color: trade.side === 'buy' ? '#089981' : '#f23645',
                 shape: trade.side === 'buy' ? 'arrowUp' : 'arrowDown',
-                text: 'ENTRADA'
+                text: 'TRADE'
             }]);
 
             chart.timeScale().fitContent();
+            setDebug("Gráfico cargado correctamente.", "#089981");
+
         } catch(e) { 
-            alert("Error: " + e.message); 
+            setDebug(`Error de red: ${e.message}`, "#f23645"); 
         }
     }
 
@@ -118,17 +116,14 @@
         trades.forEach(t => {
             const d = document.createElement('div');
             d.className = 'trade-item';
-            d.innerHTML = `<b>${t.sym}</b><br><small>${t.date} · ${t.side.toUpperCase()}</small>`;
+            d.innerHTML = `<b>${t.sym}</b><br><small>${t.date}</small>`;
             d.onclick = () => loadChart(t);
             container.appendChild(d);
         });
     }
 
-    window.addEventListener('resize', () => {
-        chart.applyOptions({ width: document.getElementById('chart').clientWidth });
-    });
-
-    init();
+    document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
+    renderList();
 </script>
 </body>
 </html>
