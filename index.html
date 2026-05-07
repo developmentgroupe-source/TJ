@@ -1,162 +1,232 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Journal Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root { --bg-dark: #0b0e14; --card-bg: #151921; --accent: #3b82f6; --text-dim: #94a3b8; }
-        body { background-color: var(--bg-dark); color: white; font-family: 'Inter', sans-serif; }
-        .sidebar { width: 240px; border-right: 1px solid #1e293b; height: 100vh; position: fixed; }
-        .main-content { margin-left: 240px; padding: 24px; }
-        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid #1e293b; }
-        .nav-item { padding: 12px 16px; border-radius: 8px; color: var(--text-dim); transition: 0.2s; display: flex; align-items: center; gap: 12px; cursor: pointer; }
-        .nav-item:hover, .nav-item.active { background: #1e293b; color: white; }
-        .trade-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        .trade-table tr { background: var(--card-bg); }
-        .trade-table td, .trade-table th { padding: 12px 16px; font-size: 13px; }
-        .trade-table th { color: var(--text-dim); text-align: left; text-transform: uppercase; font-size: 11px; }
-        .btn-primary { background: #3b82f6; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; }
-        .status-win { color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 4px; }
-        .status-loss { color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 4px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Journal Pro — Firebase Edition</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+:root{
+  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e28;--bg4:#222736;
+  --border:#2a2f3d;--border2:#363c50;
+  --text:#e8eaf0;--text2:#8b90a0;--text3:#555a6a;
+  --green:#00d4a0;--green-bg:#00d4a015;
+  --red:#ff5566;--red-bg:#ff556610;
+  --blue:#4a9eff;--blue-bg:#4a9eff12;
+  --font-mono:'IBM Plex Mono',monospace;
+  --font-sans:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px; overflow: hidden;}
+.app{display:grid;grid-template-columns:220px 1fr;height:100vh}
+
+/* SIDEBAR */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;}
+.logo{padding:20px;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green);}
+.nav{padding:12px 0;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:12px 20px;cursor:pointer;color:var(--text2);font-size:13px;transition:all .15s}
+.nav-item:hover{color:var(--text);background:var(--bg3)}
+.nav-item.active{color:var(--blue);background:var(--blue-bg);border-left:3px solid var(--blue)}
+
+/* MAIN AREA */
+.main{display: grid; grid-template-rows: 60px 1fr; height: 100vh;}
+.topbar{background:var(--bg);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between}
+.content-grid{display: grid; grid-template-columns: 1fr 400px; overflow: hidden;}
+
+/* TRADES LIST */
+.trades-container{padding:20px; overflow-y: auto; border-right: 1px solid var(--border);}
+.trades-table{width:100%; border-collapse: collapse;}
+.trades-table th{text-align:left; color:var(--text3); font-size:10px; text-transform:uppercase; padding:10px; border-bottom:1px solid var(--border)}
+.trades-table td{padding:12px 10px; border-bottom:1px solid var(--border); font-size:13px; cursor: pointer;}
+.trades-table tr:hover{background: var(--bg2);}
+
+/* CHART & FORM */
+.right-panel{display: flex; flex-direction: column; background: var(--bg2);}
+.chart-box{height: 50%; border-bottom: 1px solid var(--border); background: #000;}
+.form-box{padding: 20px; overflow-y: auto; flex: 1;}
+
+/* ELEMENTS */
+.input-group{margin-bottom:15px}
+.input-group label{display:block; font-size:10px; color:var(--text3); margin-bottom:5px; text-transform:uppercase}
+.input-group input, .input-group textarea, .input-group select{
+    width:100%; background:var(--bg3); border:1px solid var(--border); padding:8px; border-radius:5px; color:white; outline:none;
+}
+.btn-save{width:100%; background:var(--blue); color:white; padding:10px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;}
+.pill{padding:2px 6px; border-radius:4px; font-size:11px; font-family:var(--font-mono);}
+.win{background:var(--green-bg); color:var(--green)}
+.loss{background:var(--red-bg); color:var(--red)}
+</style>
 </head>
 <body>
 
-    <div class="sidebar p-4 flex flex-col justify-between">
-        <div>
-            <div class="text-blue-500 font-bold text-xl mb-8 flex items-center gap-2">
-                <i class="fas fa-chart-line"></i> JOURNAL
-            </div>
-            <nav class="space-y-2">
-                <div class="nav-item active"><i class="fas fa-list"></i> Mis trades</div>
-                <div class="nav-item"><i class="fas fa-plus-circle"></i> Nuevo trade</div>
-                <div class="nav-item"><i class="fas fa-chart-pie"></i> Analítica</div>
-                <div class="nav-item"><i class="fas fa-file-import"></i> Importar trades</div>
-                <div class="nav-item"><i class="fas fa-tv"></i> Exportar a TV</div>
-            </nav>
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo"><div class="logo-dot"></div>JOURNAL PRO</div>
+        <nav class="nav">
+            <div class="nav-item active">▤ Mis trades</div>
+            <div class="nav-item">◈ Analítica</div>
+            <div class="nav-item">↓ Importar CSV</div>
+        </nav>
+        <div style="padding:20px; border-top:1px solid var(--border)">
+            <div style="font-size:10px; color:var(--text3)">WIN RATE</div>
+            <div id="wr-display" style="font-size:20px; font-family:var(--font-mono)">0%</div>
+            <div style="font-size:10px; color:var(--text3); margin-top:10px">TOTAL P&L</div>
+            <div id="pnl-display" style="font-size:20px; font-family:var(--font-mono)">$0.00</div>
         </div>
-        <div class="p-4 bg-slate-900 rounded-lg">
-            <div class="text-xs text-slate-400">P&L TOTAL</div>
-            <div class="text-lg font-bold text-green-400" id="total-pl-sidebar">$0.00</div>
-        </div>
-    </div>
+    </aside>
 
-    <div class="main-content">
-        <header class="flex justify-between items-center mb-8">
-            <div>
-                <h1 class="text-2xl font-bold">Mis trades</h1>
-                <p class="text-sm text-slate-400" id="current-date"></p>
-            </div>
-            <div class="flex gap-3">
-                <button class="bg-slate-800 px-4 py-2 rounded-lg text-sm"><i class="fas fa-sync"></i> Sync</button>
-                <button class="btn-primary text-sm">+ Nuevo trade</button>
-            </div>
+    <main class="main">
+        <header class="topbar">
+            <div style="font-size:14px; font-weight:500">Dashboard de Operaciones</div>
+            <div style="font-size:11px; color:var(--text3)" id="sync-status">Conectado a Firebase</div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8 text-center">
-            <div class="stat-card">
-                <div class="text-[10px] text-slate-400">P&L TOTAL</div>
-                <div class="text-xl font-bold text-green-400" id="stats-pl">$0.00</div>
+        <div class="content-grid">
+            <div class="trades-container">
+                <table class="trades-table">
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Entrada</th>
+                            <th>Salida</th>
+                            <th>P&L</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trades-tbody">
+                        </tbody>
+                </table>
             </div>
-            <div class="stat-card">
-                <div class="text-[10px] text-slate-400">WIN RATE</div>
-                <div class="text-xl font-bold text-blue-400" id="stats-wr">0%</div>
-            </div>
-            <div class="stat-card">
-                <div class="text-[10px] text-slate-400">PROFIT FACTOR</div>
-                <div class="text-xl font-bold">0.0</div>
-            </div>
-            <div class="stat-card">
-                <div class="text-[10px] text-slate-400">AVG WIN</div>
-                <div class="text-xl font-bold text-green-400">$0.00</div>
-            </div>
-            <div class="stat-card">
-                <div class="text-[10px] text-slate-400">OPEN</div>
-                <div class="text-xl font-bold">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="text-[10px] text-slate-400">TOTAL TRADES</div>
-                <div class="text-xl font-bold" id="stats-total">0</div>
+
+            <div class="right-panel">
+                <div class="chart-box" id="tv_chart_container">
+                    </div>
+                <div class="form-box">
+                    <h3 style="font-size:12px; margin-bottom:15px; color:var(--blue)">NUEVO REGISTRO</h3>
+                    <form id="trade-form">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                            <div class="input-group">
+                                <label>Ticker</label>
+                                <input type="text" id="f-ticker" placeholder="AAPL" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Cantidad</label>
+                                <input type="number" id="f-qty" value="1">
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                            <div class="input-group">
+                                <label>Precio Entrada</label>
+                                <input type="number" id="f-entry" step="0.01" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Precio Salida</label>
+                                <input type="number" id="f-exit" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Notas del Trade</label>
+                            <textarea id="f-notes" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn-save">GUARDAR TRADE</button>
+                    </form>
+                </div>
             </div>
         </div>
+    </main>
+</div>
 
-        <div class="overflow-x-auto">
-            <table class="trade-table">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Ticker</th>
-                        <th>Dir</th>
-                        <th>Entrada</th>
-                        <th>Salida</th>
-                        <th>P&L $</th>
-                        <th>Estado</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody id="trades-tbody">
-                    </tbody>
-            </table>
-        </div>
-    </div>
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    // TU CONFIGURACIÓN REAL DE FIREBASE
+    const firebaseConfig = {
+        apiKey: "AIzaSyBSyRUK_KMRyECGZ5NRZ1wvE5WcYFm05Sw",
+        authDomain: "trading-journal-ac545.firebaseapp.com",
+        projectId: "trading-journal-ac545",
+        storageBucket: "trading-journal-ac545.firebasestorage.app",
+        messagingSenderId: "113557647477",
+        appId: "1:113557647477:web:79ba58c3f5ff6efd00c83c"
+    };
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBSyRUK_KMRyECGZ5NRZ1wvE5WcYFm05Sw",
-            authDomain: "trading-journal-ac545.firebaseapp.com",
-            projectId: "trading-journal-ac545",
-            storageBucket: "trading-journal-ac545.firebasestorage.app",
-            messagingSenderId: "113557647477",
-            appId: "1:113557647477:web:79ba58c3f5ff6efd00c83c"
-        };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-
-        onSnapshot(query(collection(db, "trades"), orderBy("timestamp", "desc")), (snapshot) => {
-            const tbody = document.getElementById('trades-tbody');
-            tbody.innerHTML = '';
-            
-            let totalPL = 0;
-            let wins = 0;
-            let count = 0;
-
-            snapshot.forEach((doc) => {
-                const t = doc.data();
-                const pnl = parseFloat(t.exit) - parseFloat(t.entry);
-                totalPL += pnl;
-                count++;
-                if(pnl > 0) wins++;
-
-                const row = `
-                    <tr class="hover:bg-slate-800 transition">
-                        <td class="rounded-l-lg text-slate-400">${t.timestamp.toDate().toLocaleDateString()}</td>
-                        <td class="font-bold">${t.symbol}</td>
-                        <td><span class="text-blue-400 text-xs">Long</span></td>
-                        <td>$${t.entry}</td>
-                        <td>$${t.exit}</td>
-                        <td class="${pnl >= 0 ? 'text-green-400' : 'text-red-400'} font-mono font-bold">$${pnl.toFixed(2)}</td>
-                        <td><span class="${pnl >= 0 ? 'status-win' : 'status-loss'} text-[10px] font-bold uppercase">${pnl >= 0 ? 'Win' : 'Loss'}</span></td>
-                        <td class="rounded-r-lg text-right"><button class="text-slate-500 hover:text-white"><i class="fas fa-edit"></i></button></td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-
-            // Actualizar Stats
-            document.getElementById('stats-pl').innerText = `$${totalPL.toFixed(2)}`;
-            document.getElementById('total-pl-sidebar').innerText = `$${totalPL.toFixed(2)}`;
-            document.getElementById('stats-total').innerText = count;
-            document.getElementById('stats-wr').innerText = count > 0 ? `${((wins/count)*100).toFixed(0)}%` : '0%';
+    // FUNCIÓN PARA CARGAR EL GRÁFICO
+    window.updateChart = function(symbol) {
+        new TradingView.widget({
+            "autosize": true,
+            "symbol": symbol.includes(':') ? symbol : "NASDAQ:" + symbol,
+            "interval": "D",
+            "timezone": "America/New_York",
+            "theme": "dark",
+            "style": "1",
+            "locale": "es",
+            "container_id": "tv_chart_container",
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
         });
-    </script>
+    }
+
+    // CARGA INICIAL
+    updateChart("NASDAQ:AAPL");
+
+    // GUARDAR EN FIREBASE
+    document.getElementById('trade-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const symbol = document.getElementById('f-ticker').value.toUpperCase();
+        const entry = parseFloat(document.getElementById('f-entry').value);
+        const exit = parseFloat(document.getElementById('f-exit').value);
+        
+        try {
+            await addDoc(collection(db, "trades"), {
+                symbol: symbol,
+                entry: entry,
+                exit: exit,
+                qty: document.getElementById('f-qty').value,
+                notes: document.getElementById('f-notes').value,
+                timestamp: new Date()
+            });
+            document.getElementById('trade-form').reset();
+            updateChart(symbol);
+        } catch (e) { console.error("Error: ", e); }
+    });
+
+    // ESCUCHAR TRADES (TIEMPO REAL)
+    onSnapshot(query(collection(db, "trades"), orderBy("timestamp", "desc")), (snapshot) => {
+        const tbody = document.getElementById('trades-tbody');
+        tbody.innerHTML = '';
+        let totalPnl = 0;
+        let wins = 0;
+        let count = 0;
+
+        snapshot.forEach((doc) => {
+            const t = doc.data();
+            const pnl = (t.exit - t.entry) * (t.qty || 1);
+            totalPnl += pnl;
+            count++;
+            if (pnl > 0) wins++;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight:bold">${t.symbol}</td>
+                <td class="mono">${t.entry}</td>
+                <td class="mono">${t.exit}</td>
+                <td class="mono ${pnl >= 0 ? 'green' : 'red'}" style="color: ${pnl >= 0 ? '#00d4a0' : '#ff5566'}">$${pnl.toFixed(2)}</td>
+                <td><span class="pill ${pnl >= 0 ? 'win' : 'loss'}">${pnl >= 0 ? 'WIN' : 'LOSS'}</span></td>
+            `;
+            tr.onclick = () => updateChart(t.symbol);
+            tbody.appendChild(tr);
+        });
+
+        // ACTUALIZAR SIDEBAR
+        document.getElementById('wr-display').innerText = count > 0 ? Math.round((wins/count)*100) + "%" : "0%";
+        document.getElementById('pnl-display').innerText = "$" + totalPnl.toFixed(2);
+        document.getElementById('pnl-display').style.color = totalPnl >= 0 ? '#00d4a0' : '#ff5566';
+    });
+</script>
 </body>
 </html>
