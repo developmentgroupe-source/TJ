@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Trading Journal Pro</title>
+    <title>Trading Journal Pro | Fixed</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         :root { --bg: #0b0e14; --panel: #151921; --border: #242933; --text: #d1d4dc; --accent: #2962ff; --green: #089981; --red: #f23645; }
@@ -11,48 +11,46 @@
         .main { flex: 1; display: flex; flex-direction: column; }
         #chart { flex: 1; background: #000; margin: 15px; border-radius: 8px; border: 1px solid var(--border); }
         input, select { background: #1e222d; border: 1px solid var(--border); color: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
-        .btn { background: var(--accent); color: white; border: none; padding: 12px; cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%; margin-bottom: 5px; }
-        .trade-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; background: #1c212b; margin-bottom: 5px; border-radius: 4px; font-size: 14px; }
-        #debug-msg { font-size: 11px; color: #ffb340; margin: 10px 0; text-align: center; font-family: monospace; }
+        .btn { background: var(--accent); color: white; border: none; padding: 12px; cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%; }
+        .trade-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; background: #1c212b; margin-bottom: 5px; border-radius: 4px; }
+        #debug-msg { font-size: 11px; color: #ffb340; margin: 10px 0; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
     <h2 style="color:var(--accent); margin:0 0 15px 0;">Journal Pro</h2>
-    
     <input type="text" id="t-sym" placeholder="Símbolo (Ej: AAPL)">
     <input type="date" id="t-date">
     <select id="t-side"><option value="buy">BUY / LONG</option><option value="sell">SELL / SHORT</option></select>
-    
     <button class="btn" onclick="addTrade()">Añadir Trade</button>
-    <button class="btn" style="background:#3e4149; font-size: 10px;" onclick="clearData()">Limpiar Datos</button>
-
-    <div id="debug-msg">Esperando...</div>
-
+    <div id="debug-msg">Iniciando gráfico...</div>
     <div style="margin-top:20px; overflow-y:auto; flex:1" id="list"></div>
 </div>
 
 <div class="main"><div id="chart"></div></div>
 
 <script>
-    // 1. TU API KEY
+    // 1. CONFIGURACIÓN
     const API_KEY = "f555d5dc66dc44e19c96376985c8da49"; 
 
-    // 2. VARIABLES GLOBALES
-    let trades = JSON.parse(localStorage.getItem('trading_v9') || '[]');
+    // 2. VARIABLES GLOBALES (Definidas pero vacías)
+    let trades = JSON.parse(localStorage.getItem('trading_v10') || '[]');
     let chart;
     let candleSeries;
 
-    // 3. INICIALIZAR TODO
+    // 3. INICIALIZACIÓN (Asegura que el DOM existe)
     window.onload = function() {
-        const chartEl = document.getElementById('chart');
-        chart = LightweightCharts.createChart(chartEl, {
+        const chartContainer = document.getElementById('chart');
+        
+        // Crear el gráfico
+        chart = LightweightCharts.createChart(chartContainer, {
             layout: { background: { color: '#000000' }, textColor: '#d1d4dc' },
             grid: { vertLines: { color: '#131722' }, horzLines: { color: '#131722' } },
             timeScale: { timeVisible: true }
         });
         
+        // Crear la serie de velas e ASIGNARLA a la variable global
         candleSeries = chart.addCandlestickSeries({
             upColor: '#089981', downColor: '#f23645',
             borderVisible: false, wickUpColor: '#089981', wickDownColor: '#f23645'
@@ -63,18 +61,6 @@
         document.getElementById('debug-msg').innerText = "Sistema Listo ✓";
     };
 
-    function renderList() {
-        const container = document.getElementById('list');
-        container.innerHTML = '';
-        trades.forEach((t, index) => {
-            const d = document.createElement('div');
-            d.className = 'trade-item';
-            d.innerHTML = `<b>${t.sym}</b> | ${t.side}<br>${t.date}`;
-            d.onclick = () => loadChart(t);
-            container.appendChild(d);
-        });
-    }
-
     async function addTrade() {
         const sym = document.getElementById('t-sym').value.toUpperCase().trim();
         const date = document.getElementById('t-date').value;
@@ -84,15 +70,21 @@
 
         const newTrade = { sym, date, side };
         trades.unshift(newTrade);
-        localStorage.setItem('trading_v9', JSON.stringify(trades));
+        localStorage.setItem('trading_v10', JSON.stringify(trades));
         renderList();
         loadChart(newTrade);
     }
 
     async function loadChart(trade) {
         const msg = document.getElementById('debug-msg');
+        
+        // VALIDACIÓN CRÍTICA: Si candleSeries no existe, abortar para evitar el error
+        if (!candleSeries) {
+            msg.innerText = "Error: El gráfico no se ha inicializado.";
+            return;
+        }
+
         msg.innerText = "Cargando " + trade.sym + "...";
-        msg.style.color = "#ffb340";
 
         try {
             const url = `https://api.twelvedata.com/time_series?symbol=${trade.sym}&interval=1day&apikey=${API_KEY}&outputsize=100&order=ASC`;
@@ -107,6 +99,7 @@
                 low: parseFloat(v.low), close: parseFloat(v.close)
             }));
 
+            // Ahora candleSeries está garantizado
             candleSeries.setData(bars);
             
             candleSeries.setMarkers([{
@@ -119,20 +112,21 @@
 
             chart.timeScale().fitContent();
             msg.innerText = "¡Cargado!";
-            msg.style.color = "#089981";
         } catch(e) {
             msg.innerText = "Error: " + e.message;
-            msg.style.color = "#f23645";
         }
     }
 
-    function clearData() {
-        if(confirm("¿Borrar todos los trades?")) {
-            localStorage.removeItem('trading_v9');
-            trades = [];
-            renderList();
-            location.reload();
-        }
+    function renderList() {
+        const container = document.getElementById('list');
+        container.innerHTML = '';
+        trades.forEach(t => {
+            const d = document.createElement('div');
+            d.className = 'trade-item';
+            d.innerHTML = `<b>${t.sym}</b> | ${t.side}<br>${t.date}`;
+            d.onclick = () => loadChart(t);
+            container.appendChild(d);
+        });
     }
 </script>
 </body>
