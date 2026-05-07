@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Journal Pro</title>
+    <title>Trading Journal Pro | Stocks</title>
     <style>
         :root { --bg: #0b0e14; --side: #151921; --accent: #2962ff; --text: #d1d4dc; --border: #242933; }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -20,7 +20,6 @@
         .trade-card strong { color: #fff; font-size: 14px; }
         .trade-card span { font-size: 12px; color: #787b86; display: block; margin-top: 4px; }
         #chart-container { flex: 1; width: 100%; }
-        /* Scrollbar styling */
         .trade-list::-webkit-scrollbar { width: 4px; }
         .trade-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     </style>
@@ -28,10 +27,10 @@
 <body>
     <div class="sidebar">
         <h2>Journal Pro</h2>
-        <input type="text" id="sym" placeholder="Símbolo (Ej: BTCUSDT)">
+        <input type="text" id="sym" placeholder="Símbolo (Ej: NASDAQ:AAPL o NYSE:NIO)">
         <input type="date" id="date">
         <select id="side"><option value="LONG">LONG</option><option value="SHORT">SHORT</option></select>
-        <textarea id="notes" placeholder="Notas del trade..." rows="3"></textarea>
+        <textarea id="notes" placeholder="Análisis del trade..." rows="3"></textarea>
         <button class="btn-save" onclick="addTrade()">Guardar Registro</button>
         <div class="trade-list" id="list"></div>
     </div>
@@ -41,12 +40,15 @@
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        let trades = JSON.parse(localStorage.getItem('final_journal_data') || '[]');
+        let trades = JSON.parse(localStorage.getItem('stocks_journal_v1') || '[]');
 
         function initChart(symbol) {
+            // Limpia el símbolo para asegurar que sea compatible con Stocks
+            let cleanSymbol = symbol.toUpperCase().trim();
+            
             new TradingView.widget({
                 "autosize": true,
-                "symbol": symbol.includes(":") ? symbol : "BINANCE:" + symbol,
+                "symbol": cleanSymbol,
                 "interval": "5",
                 "timezone": "Etc/UTC",
                 "theme": "dark",
@@ -69,7 +71,7 @@
 
             const trade = { sym, date, side, notes, id: Date.now() };
             trades.unshift(trade);
-            localStorage.setItem('final_journal_data', JSON.stringify(trades));
+            localStorage.setItem('stocks_journal_v1', JSON.stringify(trades));
             renderList();
             initChart(sym);
         }
@@ -91,7 +93,8 @@
 
         window.onload = () => {
             renderList();
-            initChart(trades.length > 0 ? trades[0].sym : "BINANCE:BTCUSDT");
+            // Carga AAPL por defecto si no hay trades
+            initChart(trades.length > 0 ? trades[0].sym : "NASDAQ:AAPL");
         };
     </script>
 </body>
