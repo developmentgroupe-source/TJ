@@ -11,26 +11,20 @@
         .main { flex: 1; display: flex; flex-direction: column; background: #000; }
         h2 { color: var(--accent); margin: 0 0 20px 0; font-size: 22px; letter-spacing: -0.5px; }
         input, select, textarea { background: #1e222d; border: 1px solid var(--border); color: white; padding: 12px; margin-bottom: 12px; border-radius: 6px; width: 100%; box-sizing: border-box; outline: none; }
-        input:focus { border-color: var(--accent); }
-        .btn-save { background: var(--accent); color: white; border: none; padding: 15px; cursor: pointer; border-radius: 6px; font-weight: 600; width: 100%; transition: opacity 0.2s; }
-        .btn-save:hover { opacity: 0.9; }
-        .trade-list { flex: 1; overflow-y: auto; margin-top: 20px; padding-right: 5px; }
-        .trade-card { background: #1c212b; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.1s; }
-        .trade-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-        .trade-card strong { color: #fff; font-size: 14px; }
-        .trade-card span { font-size: 12px; color: #787b86; display: block; margin-top: 4px; }
+        .btn-save { background: var(--accent); color: white; border: none; padding: 15px; cursor: pointer; border-radius: 6px; font-weight: 600; width: 100%; }
+        .trade-list { flex: 1; overflow-y: auto; margin-top: 20px; }
+        .trade-card { background: #1c212b; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer; }
+        .trade-card:hover { border-color: var(--accent); }
         #chart-container { flex: 1; width: 100%; }
-        .trade-list::-webkit-scrollbar { width: 4px; }
-        .trade-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <h2>Journal Pro</h2>
-        <input type="text" id="sym" placeholder="Símbolo (Ej: NASDAQ:AAPL o NYSE:NIO)">
+        <input type="text" id="sym" placeholder="Ej: NASDAQ:AAPL">
         <input type="date" id="date">
         <select id="side"><option value="LONG">LONG</option><option value="SHORT">SHORT</option></select>
-        <textarea id="notes" placeholder="Análisis del trade..." rows="3"></textarea>
+        <textarea id="notes" placeholder="Notas del trade..." rows="3"></textarea>
         <button class="btn-save" onclick="addTrade()">Guardar Registro</button>
         <div class="trade-list" id="list"></div>
     </div>
@@ -40,17 +34,14 @@
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        let trades = JSON.parse(localStorage.getItem('stocks_journal_v1') || '[]');
+        let trades = JSON.parse(localStorage.getItem('stocks_journal_v2') || '[]');
 
         function initChart(symbol) {
-            // Limpia el símbolo para asegurar que sea compatible con Stocks
-            let cleanSymbol = symbol.toUpperCase().trim();
-            
             new TradingView.widget({
                 "autosize": true,
-                "symbol": cleanSymbol,
+                "symbol": symbol.toUpperCase().trim(),
                 "interval": "5",
-                "timezone": "Etc/UTC",
+                "timezone": "America/New_York", // Ajustado para horario de New York (Stocks)
                 "theme": "dark",
                 "style": "1",
                 "locale": "es",
@@ -58,6 +49,11 @@
                 "enable_publishing": false,
                 "hide_side_toolbar": false,
                 "allow_symbol_change": true,
+                "save_image": true,
+                "studies": [],
+                "show_popup_button": true,
+                "popup_width": "1000",
+                "popup_height": "650",
                 "container_id": "chart-container"
             });
         }
@@ -71,7 +67,7 @@
 
             const trade = { sym, date, side, notes, id: Date.now() };
             trades.unshift(trade);
-            localStorage.setItem('stocks_journal_v1', JSON.stringify(trades));
+            localStorage.setItem('stocks_journal_v2', JSON.stringify(trades));
             renderList();
             initChart(sym);
         }
@@ -93,7 +89,6 @@
 
         window.onload = () => {
             renderList();
-            // Carga AAPL por defecto si no hay trades
             initChart(trades.length > 0 ? trades[0].sym : "NASDAQ:AAPL");
         };
     </script>
