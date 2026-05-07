@@ -11,9 +11,9 @@
         .main { flex: 1; display: flex; flex-direction: column; }
         #chart { flex: 1; background: #000; margin: 15px; border-radius: 8px; border: 1px solid var(--border); }
         input, select { background: #1e222d; border: 1px solid var(--border); color: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
-        .btn { background: var(--accent); color: white; border: none; padding: 12px; cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%; }
-        .trade-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; background: #1c212b; margin-bottom: 8px; border-radius: 6px; }
-        #debug-msg { font-size: 11px; color: #ffb340; margin-top: 10px; font-family: monospace; text-align: center; }
+        .btn { background: var(--accent); color: white; border: none; padding: 12px; cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%; margin-bottom: 5px; }
+        .trade-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; background: #1c212b; margin-bottom: 5px; border-radius: 4px; font-size: 14px; }
+        #debug-msg { font-size: 11px; color: #ffb340; margin: 10px 0; text-align: center; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -21,127 +21,119 @@
 <div class="sidebar">
     <h2 style="color:var(--accent); margin:0 0 15px 0;">Journal Pro</h2>
     
-    <input type="text" id="t-sym" placeholder="Símbolo (AAPL, BTC/USD)">
+    <input type="text" id="t-sym" placeholder="Símbolo (Ej: AAPL)">
     <input type="date" id="t-date">
     <select id="t-side"><option value="buy">BUY / LONG</option><option value="sell">SELL / SHORT</option></select>
-    <button class="btn" onclick="addTrade()">Visualizar Trade</button>
+    
+    <button class="btn" onclick="addTrade()">Añadir Trade</button>
+    <button class="btn" style="background:#3e4149; font-size: 10px;" onclick="clearData()">Limpiar Datos</button>
 
-    <div id="debug-msg">Sistema Iniciado</div>
+    <div id="debug-msg">Esperando...</div>
 
-    <div style="margin-top:20px; overflow-y:auto; flex:1"><div id="list"></div></div>
+    <div style="margin-top:20px; overflow-y:auto; flex:1" id="list"></div>
 </div>
 
 <div class="main"><div id="chart"></div></div>
 
 <script>
-    // 1. CONFIGURACIÓN (REEMPLAZA ESTA KEY)
+    // 1. TU API KEY
     const API_KEY = "f555d5dc66dc44e19c96376985c8da49"; 
 
-    // 2. INICIALIZACIÓN GLOBAL E INMEDIATA DEL GRÁFICO
-    const chartContainer = document.getElementById('chart');
-    const chart = LightweightCharts.createChart(chartContainer, {
-        layout: { background: { color: '#000000' }, textColor: '#d1d4dc' },
-        grid: { vertLines: { color: '#131722' }, horzLines: { color: '#131722' } },
-        timeScale: { timeVisible: true, borderVisible: false }
-    });
-    
-    // Creamos la serie de velas inmediatamente para que esté disponible siempre
-    const candleSeries = chart.addCandlestickSeries({ 
-        upColor: '#089981', 
-        downColor: '#f23645',
-        borderVisible: false,
-        wickUpColor: '#089981',
-        wickDownColor: '#f23645'
-    });
+    // 2. VARIABLES GLOBALES
+    let trades = JSON.parse(localStorage.getItem('trading_v9') || '[]');
+    let chart;
+    let candleSeries;
 
-    let trades = JSON.parse(localStorage.getItem('journal_v8') || '[]');
+    // 3. INICIALIZAR TODO
+    window.onload = function() {
+        const chartEl = document.getElementById('chart');
+        chart = LightweightCharts.createChart(chartEl, {
+            layout: { background: { color: '#000000' }, textColor: '#d1d4dc' },
+            grid: { vertLines: { color: '#131722' }, horzLines: { color: '#131722' } },
+            timeScale: { timeVisible: true }
+        });
+        
+        candleSeries = chart.addCandlestickSeries({
+            upColor: '#089981', downColor: '#f23645',
+            borderVisible: false, wickUpColor: '#089981', wickDownColor: '#f23645'
+        });
 
-    function setDebug(msg, color = "#ffb340") {
-        const el = document.getElementById('debug-msg');
-        el.innerText = msg;
-        el.style.color = color;
+        document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
+        renderList();
+        document.getElementById('debug-msg').innerText = "Sistema Listo ✓";
+    };
+
+    function renderList() {
+        const container = document.getElementById('list');
+        container.innerHTML = '';
+        trades.forEach((t, index) => {
+            const d = document.createElement('div');
+            d.className = 'trade-item';
+            d.innerHTML = `<b>${t.sym}</b> | ${t.side}<br>${t.date}`;
+            d.onclick = () => loadChart(t);
+            container.appendChild(d);
+        });
     }
 
     async function addTrade() {
         const sym = document.getElementById('t-sym').value.toUpperCase().trim();
         const date = document.getElementById('t-date').value;
         const side = document.getElementById('t-side').value;
-        if(!sym) return alert("Por favor, ingresa un símbolo.");
 
-        const newTrade = { sym, date, side, id: Date.now() };
+        if(!sym) return alert("Escribe un símbolo");
+
+        const newTrade = { sym, date, side };
         trades.unshift(newTrade);
-        localStorage.setItem('journal_v8', JSON.stringify(trades));
+        localStorage.setItem('trading_v9', JSON.stringify(trades));
         renderList();
         loadChart(newTrade);
     }
 
     async function loadChart(trade) {
-        setDebug(`Cargando ${trade.sym}...`);
-        
+        const msg = document.getElementById('debug-msg');
+        msg.innerText = "Cargando " + trade.sym + "...";
+        msg.style.color = "#ffb340";
+
         try {
-            // Usamos intervalo diario para máxima compatibilidad
-            const url = `https://api.twelvedata.com/time_series?symbol=${trade.sym}&interval=1day&apikey=${API_KEY}&outputsize=150&order=ASC`;
+            const url = `https://api.twelvedata.com/time_series?symbol=${trade.sym}&interval=1day&apikey=${API_KEY}&outputsize=100&order=ASC`;
             const res = await fetch(url);
             const data = await res.json();
-            
-            if(data.status === "error") {
-                setDebug(`Error: ${data.message}`, "#f23645");
-                return;
-            }
 
-            if(!data.values) {
-                setDebug("Símbolo no encontrado.", "#f23645");
-                return;
-            }
+            if(data.status === "error") throw new Error(data.message);
 
             const bars = data.values.map(v => ({
-                time: v.datetime, 
-                open: parseFloat(v.open), 
-                high: parseFloat(v.high), 
-                low: parseFloat(v.low), 
-                close: parseFloat(v.close)
+                time: v.datetime,
+                open: parseFloat(v.open), high: parseFloat(v.high),
+                low: parseFloat(v.low), close: parseFloat(v.close)
             }));
-            
-            // Aquí ya no dará error porque candleSeries se definió al inicio
+
             candleSeries.setData(bars);
             
-            // Colocar marcador del trade
             candleSeries.setMarkers([{
                 time: trade.date,
                 position: trade.side === 'buy' ? 'belowBar' : 'aboveBar',
                 color: trade.side === 'buy' ? '#089981' : '#f23645',
                 shape: trade.side === 'buy' ? 'arrowUp' : 'arrowDown',
-                text: trade.side.toUpperCase()
+                text: 'ENTRY'
             }]);
 
             chart.timeScale().fitContent();
-            setDebug("¡Éxito! Gráfico actualizado.", "#089981");
-
-        } catch(e) { 
-            setDebug(`Error de red: ${e.message}`, "#f23645"); 
+            msg.innerText = "¡Cargado!";
+            msg.style.color = "#089981";
+        } catch(e) {
+            msg.innerText = "Error: " + e.message;
+            msg.style.color = "#f23645";
         }
     }
 
-    function renderList() {
-        const container = document.getElementById('list');
-        container.innerHTML = '<b>HISTORIAL:</b><br><br>';
-        trades.forEach(t => {
-            const d = document.createElement('div');
-            d.className = 'trade-item';
-            d.innerHTML = `<b>${t.sym}</b> - ${t.side.toUpperCase()}<br><small>${t.date}</small>`;
-            d.onclick = () => loadChart(t);
-            container.appendChild(d);
-        });
+    function clearData() {
+        if(confirm("¿Borrar todos los trades?")) {
+            localStorage.removeItem('trading_v9');
+            trades = [];
+            renderList();
+            location.reload();
+        }
     }
-
-    // Ajustar gráfico si se cambia el tamaño de la ventana
-    window.addEventListener('resize', () => {
-        chart.applyOptions({ width: chartContainer.clientWidth });
-    });
-
-    // Cargar trades guardados al iniciar
-    document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
-    renderList();
 </script>
 </body>
 </html>
