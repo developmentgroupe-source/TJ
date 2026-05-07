@@ -2,115 +2,79 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Trading Journal Pro</title>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <title>Trading Journal Ultra-Simple</title>
     <style>
-        :root { --bg: #0b0e14; --panel: #151921; --border: #242933; --text: #d1d4dc; --accent: #2962ff; --green: #089981; --red: #f23645; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 300px; background: var(--panel); border-right: 1px solid var(--border); padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; }
-        .main { flex: 1; display: flex; flex-direction: column; position: relative; }
-        #chart { width: 100%; height: 100%; background: #000; }
-        input, select { background: #1e222d; border: 1px solid var(--border); color: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
-        .btn { background: var(--accent); color: white; border: none; padding: 12px; cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%; }
-        .trade-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; background: #1c212b; margin-bottom: 5px; border-radius: 4px; font-size: 13px; }
-        #status { font-size: 11px; color: #ffb340; margin: 10px 0; text-align: center; font-family: monospace; }
+        body { background: #0b0e14; color: #d1d4dc; font-family: sans-serif; margin: 0; display: flex; height: 100vh; }
+        .sidebar { width: 350px; background: #151921; border-right: 1px solid #242933; padding: 20px; box-sizing: border-box; }
+        .main { flex: 1; position: relative; background: #000; }
+        input, select { background: #1e222d; border: 1px solid #242933; color: white; padding: 12px; margin-bottom: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+        .btn { background: #2962ff; color: white; border: none; padding: 12px; cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%; margin-bottom: 10px; }
+        .trade-item { padding: 15px; background: #1c212b; margin-bottom: 10px; border-radius: 8px; border-left: 5px solid #2962ff; cursor: pointer; }
+        .trade-item:hover { background: #252b37; }
+        #chart-container { width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2 style="color:var(--accent); margin:0 0 15px 0;">Journal Pro</h2>
-    <input type="text" id="t-sym" placeholder="Símbolo (Ej: BTC/USD)">
-    <input type="date" id="t-date">
-    <select id="t-side"><option value="buy">LONG</option><option value="sell">SHORT</option></select>
-    <button class="btn" onclick="addTrade()">Añadir Operación</button>
-    <div id="status">Iniciando...</div>
-    <div style="margin-top:20px; overflow-y:auto; flex:1" id="list"></div>
+    <h2>Mi Diario</h2>
+    <input type="text" id="sym" placeholder="Símbolo (Ej: BTCUSDT o AAPL)">
+    <input type="date" id="date">
+    <select id="side"><option value="LONG">LONG</option><option value="SHORT">SHORT</option></select>
+    <button class="btn" onclick="saveTrade()">Guardar y Ver</button>
+    <hr style="border: 0; border-top: 1px solid #242933; margin: 20px 0;">
+    <div id="list"></div>
 </div>
 
 <div class="main">
-    <div id="chart"></div>
+    <div id="chart-container">
+        <div style="padding: 50px; text-align: center; color: #5d606b;">
+            Escribe un símbolo y dale a "Guardar" para cargar el gráfico.
+        </div>
+    </div>
 </div>
 
 <script>
-    // 1. CONFIGURACIÓN (Pon tu clave aquí)
-    const API_KEY = "f555d5dc66dc44e19c96376985c8da49"; 
+    let trades = JSON.parse(localStorage.getItem('simple_journal') || '[]');
 
-    // 2. VARIABLES GLOBALES
-    let trades = JSON.parse(localStorage.getItem('trading_final_v1') || '[]');
-    let chart, candleSeries;
-
-    // 3. FUNCIÓN DE CREACIÓN DEL GRÁFICO (Se llama sola al cargar)
-    function createChartInstance() {
-        const container = document.getElementById('chart');
-        if (!container) return;
-
-        chart = LightweightCharts.createChart(container, {
-            layout: { background: { color: '#000000' }, textColor: '#d1d4dc' },
-            grid: { vertLines: { color: '#131722' }, horzLines: { color: '#131722' } },
-            timeScale: { timeVisible: true }
-        });
-
-        candleSeries = chart.addCandlestickSeries({
-            upColor: '#089981', downColor: '#f23645',
-            borderVisible: false, wickUpColor: '#089981', wickDownColor: '#f23645'
-        });
-
-        document.getElementById('status').innerText = "Gráfico Listo ✓";
+    function loadChart(symbol) {
+        const container = document.getElementById('chart-container');
+        container.innerHTML = ''; // Limpiar
+        
+        // Creamos el widget oficial de TradingView
+        const script = document.createElement('script');
+        script.src = "https://s3.tradingview.com/tv.js";
+        script.onload = () => {
+            new TradingView.widget({
+                "width": "100%",
+                "height": "100%",
+                "symbol": symbol,
+                "interval": "D",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "es",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "container_id": "chart-container"
+            });
+        };
+        document.head.appendChild(script);
     }
 
-    // 4. LÓGICA DE TRADES
-    async function addTrade() {
-        const sym = document.getElementById('t-sym').value.toUpperCase().trim();
-        const date = document.getElementById('t-date').value;
-        const side = document.getElementById('t-side').value;
+    function saveTrade() {
+        const symbol = document.getElementById('sym').value.toUpperCase().trim() || "BTCUSDT";
+        const date = document.getElementById('date').value;
+        const side = document.getElementById('side').value;
 
-        if(!sym || !date) return alert("Completa símbolo y fecha");
-
-        const newTrade = { sym, date, side };
-        trades.unshift(newTrade);
-        localStorage.setItem('trading_final_v1', JSON.stringify(trades));
+        const trade = { symbol, date, side };
+        trades.unshift(trade);
+        localStorage.setItem('simple_journal', JSON.stringify(trades));
+        
         renderList();
-        loadData(newTrade);
-    }
-
-    async function loadData(trade) {
-        if (!candleSeries) {
-            document.getElementById('status').innerText = "Error: Reintentando gráfico...";
-            createChartInstance();
-            if (!candleSeries) return;
-        }
-
-        document.getElementById('status').innerText = "Cargando " + trade.sym + "...";
-
-        try {
-            const url = `https://api.twelvedata.com/time_series?symbol=${trade.sym}&interval=1day&apikey=${API_KEY}&outputsize=100&order=ASC`;
-            const res = await fetch(url);
-            const data = await res.json();
-
-            if (data.status === "error") throw new Error(data.message);
-
-            const bars = data.values.map(v => ({
-                time: v.datetime,
-                open: parseFloat(v.open), high: parseFloat(v.high),
-                low: parseFloat(v.low), close: parseFloat(v.close)
-            }));
-
-            candleSeries.setData(bars);
-            
-            candleSeries.setMarkers([{
-                time: trade.date,
-                position: trade.side === 'buy' ? 'belowBar' : 'aboveBar',
-                color: trade.side === 'buy' ? '#089981' : '#f23645',
-                shape: trade.side === 'buy' ? 'arrowUp' : 'arrowDown',
-                text: 'ENTRY'
-            }]);
-
-            chart.timeScale().fitContent();
-            document.getElementById('status').innerText = trade.sym + " Cargado ✓";
-        } catch (e) {
-            document.getElementById('status').innerText = "Error: " + e.message;
-        }
+        loadChart(symbol);
     }
 
     function renderList() {
@@ -119,22 +83,13 @@
         trades.forEach(t => {
             const d = document.createElement('div');
             d.className = 'trade-item';
-            d.innerHTML = `<b>${t.sym}</b> | ${t.side.toUpperCase()}<br><small>${t.date}</small>`;
-            d.onclick = () => loadData(t);
+            d.innerHTML = `<strong>${t.symbol}</strong> - ${t.side}<br><small>${t.date}</small>`;
+            d.onclick = () => loadChart(t.symbol);
             container.appendChild(d);
         });
     }
 
-    // INICIO AUTOMÁTICO
-    window.onload = () => {
-        createChartInstance();
-        document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
-        renderList();
-    };
-
-    // Ajuste de tamaño automático
-    window.onresize = () => { if(chart) chart.applyOptions({ width: document.getElementById('chart').clientWidth }); };
-
+    renderList();
 </script>
 </body>
 </html>
