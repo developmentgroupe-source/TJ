@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trading Journal — Firebase Edition</title>
+<title>Trading Journal — Pro Edition</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
 :root{
@@ -17,46 +17,51 @@
   --font-sans:'IBM Plex Sans',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;overflow:hidden}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
 .app{display:grid;grid-template-columns:220px 1fr;height:100vh}
 
 /* SIDEBAR */
-.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100}
 .logo{padding:20px;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
 .logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
 .nav{padding:12px 0;flex:1}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;color:var(--text2);font-size:13px;border-left:2px solid transparent;transition:all .15s}
+.nav-item{display:flex;align-items:center;gap:10px;padding:12px 20px;cursor:pointer;color:var(--text2);font-size:13px;border-left:3px solid transparent;transition:all .15s}
 .nav-item:hover{color:var(--text);background:var(--bg3)}
 .nav-item.active{color:var(--blue);border-left-color:var(--blue);background:var(--blue-bg)}
 
-/* MAIN */
-.main{display:flex;flex-direction:column;height:100vh;overflow:hidden}
-.topbar{background:var(--bg);border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;justify-content:space-between}
+/* MAIN AREA */
+.main{position:relative;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{background:var(--bg);border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .content{padding:24px 28px;overflow-y:auto;flex:1}
 .page{display:none}.page.active{display:block}
 
-/* TABLES & STATS */
+/* TRADES TABLE */
 .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:24px}
 .metric{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
-.metric-label{font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
+.metric-label{font-size:10px;color:var(--text3);text-transform:uppercase}
 .metric-val{font-family:var(--font-mono);font-size:20px;font-weight:500}
-.trades-table{width:100%;border-collapse:collapse}
-.trades-table th{padding:10px 16px;text-align:left;font-size:10px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);font-family:var(--font-mono)}
-.trades-table td{padding:11px 16px;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer}
+.trades-table{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.trades-table th{padding:12px 16px;text-align:left;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);font-family:var(--font-mono)}
+.trades-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer}
 .trades-table tr:hover{background:var(--bg3)}
 
-/* MODAL CHART FULLSCREEN */
-#chart-modal{display:none;position:fixed;inset:0;background:var(--bg);z-index:1000;flex-direction:column}
-.chart-header{height:50px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+/* ACTIONS */
+.btn-edit{color:var(--blue);margin-right:10px;font-size:11px}
+.btn-delete{color:var(--red);font-size:11px}
+.btn-edit:hover, .btn-delete:hover{text-decoration:underline}
+
+/* FULLSCREEN CHART OVERLAY (BUT INSIDE MAIN) */
+#chart-container-full{display:none;position:absolute;inset:0;background:var(--bg);z-index:50;flex-direction:column}
+.chart-controls{height:45px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border)}
 
 /* FORMS */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:20px}
-.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group{display:flex;flex-direction:column;gap:5px}
 .form-input{background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 12px;outline:none}
-.btn-primary{background:var(--blue);color:white;padding:10px 20px;border:none;border-radius:6px;cursor:pointer;font-weight:bold}
+.btn-primary{background:var(--blue);color:white;padding:10px;border:none;border-radius:6px;cursor:pointer;font-weight:bold}
 
-.pill-win{color:var(--green);background:var(--green-bg);padding:2px 8px;border-radius:4px;font-size:11px}
-.pill-loss{color:var(--red);background:var(--red-bg);padding:2px 8px;border-radius:4px;font-size:11px}
+.pill-win{color:var(--green);background:var(--green-bg);padding:2px 6px;border-radius:4px;font-size:11px}
+.pill-loss{color:var(--red);background:var(--red-bg);padding:2px 6px;border-radius:4px;font-size:11px}
 </style>
 </head>
 <body>
@@ -70,68 +75,64 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
             <div class="nav-item" onclick="showPage('analytics', this)">Analítica</div>
         </nav>
         <div style="padding:20px; border-top:1px solid var(--border)">
-            <div style="font-size:10px; color:var(--text3)">NET P&L</div>
             <div id="side-pnl" style="font-size:18px; font-family:var(--font-mono)">$0.00</div>
+            <div style="font-size:10px; color:var(--text3)">NET P&L</div>
         </div>
     </aside>
 
-    <main class="main">
+    <main class="main" id="main-content">
         <header class="topbar">
-            <div id="page-title" style="font-size:15px; font-weight:500">Mis trades</div>
+            <div id="page-title" style="font-size:14px; font-weight:500; text-transform:uppercase; letter-spacing:1px">Mis trades</div>
         </header>
 
         <div class="content">
             <div id="page-trades" class="page active">
                 <div class="metrics-grid">
                     <div class="metric"><div class="metric-label">Win Rate</div><div id="m-wr" class="metric-val">0%</div></div>
-                    <div class="metric"><div class="metric-label">Trades</div><div id="m-count" class="metric-val">0</div></div>
                     <div class="metric"><div class="metric-label">Net P&L</div><div id="m-pnl" class="metric-val">$0.00</div></div>
                 </div>
-                <div style="background:var(--bg2); border:1px solid var(--border); border-radius:8px">
-                    <table class="trades-table">
-                        <thead><tr><th>Ticker</th><th>Entrada</th><th>Salida</th><th>P&L $</th><th>Estado</th></tr></thead>
-                        <tbody id="trades-tbody"></tbody>
-                    </table>
-                </div>
+                <table class="trades-table">
+                    <thead><tr><th>Ticker</th><th>Entrada</th><th>Salida</th><th>P&L</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody id="trades-tbody"></tbody>
+                </table>
             </div>
 
             <div id="page-new" class="page">
-                <div style="background:var(--bg2); border:1px solid var(--border); border-radius:8px; max-width:600px">
+                <div style="background:var(--bg2); border:1px solid var(--border); border-radius:8px; max-width:500px">
                     <form id="trade-form">
+                        <input type="hidden" id="f-id">
                         <div class="form-grid">
-                            <div class="form-group"><label style="font-size:10px;color:var(--text3)">Ticker</label><input type="text" id="f-sym" class="form-input" required></div>
-                            <div class="form-group"><label style="font-size:10px;color:var(--text3)">Cantidad</label><input type="number" id="f-qty" class="form-input" value="1"></div>
-                            <div class="form-group"><label style="font-size:10px;color:var(--text3)">Entrada</label><input type="number" step="0.01" id="f-entry" class="form-input" required></div>
-                            <div class="form-group"><label style="font-size:10px;color:var(--text3)">Salida</label><input type="number" step="0.01" id="f-exit" class="form-input" required></div>
+                            <div class="form-group"><label class="metric-label">Ticker</label><input type="text" id="f-sym" class="form-input" required></div>
+                            <div class="form-group"><label class="metric-label">Cantidad</label><input type="number" id="f-qty" class="form-input" value="1"></div>
+                            <div class="form-group"><label class="metric-label">Entrada</label><input type="number" step="0.01" id="f-entry" class="form-input" required></div>
+                            <div class="form-group"><label class="metric-label">Salida</label><input type="number" step="0.01" id="f-exit" class="form-input" required></div>
                         </div>
                         <div style="padding:20px; border-top:1px solid var(--border)">
-                            <button type="submit" class="btn-primary">Guardar Trade</button>
+                            <button type="submit" id="btn-submit" class="btn-primary" style="width:100%">Guardar Trade</button>
                         </div>
                     </form>
                 </div>
             </div>
 
             <div id="page-analytics" class="page">
-                <div class="metric" style="height:300px; display:flex; align-items:center; justify-content:center; color:var(--text3)">
-                    Estadísticas detalladas próximamente...
-                </div>
+                <div class="metric">Analítica en desarrollo...</div>
             </div>
         </div>
-    </main>
-</div>
 
-<div id="chart-modal">
-    <div class="chart-header">
-        <div id="chart-sym-display" style="font-family:var(--font-mono); color:var(--blue)"></div>
-        <button onclick="closeChart()" style="background:none; border:1px solid var(--border); color:white; padding:5px 10px; cursor:pointer">Cerrar [X]</button>
-    </div>
-    <div id="tv-container" style="flex:1"></div>
+        <div id="chart-container-full">
+            <div class="chart-controls">
+                <span id="full-chart-title" style="font-family:var(--font-mono); color:var(--blue)"></span>
+                <button onclick="closeChart()" style="background:var(--bg3); border:1px solid var(--border); color:white; padding:4px 12px; cursor:pointer; border-radius:4px">Cerrar Gráfico</button>
+            </div>
+            <div id="tv-full-div" style="flex:1"></div>
+        </div>
+    </main>
 </div>
 
 <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBSyRUK_KMRyECGZ5NRZ1wvE5WcYFm05Sw",
@@ -145,19 +146,18 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // NAVEGACIÓN
-    window.showPage = (pageId, el) => {
+    window.showPage = (id, el) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.add('active');
+        document.getElementById('page-' + id).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('page-title').innerText = el.innerText;
+        if(el) el.classList.add('active');
+        document.getElementById('page-title').innerText = id;
+        closeChart();
     };
 
-    // GRÁFICO FULLSCREEN
     window.openChart = (symbol) => {
-        document.getElementById('chart-modal').style.display = 'flex';
-        document.getElementById('chart-sym-display').innerText = symbol;
+        document.getElementById('chart-container-full').style.display = 'flex';
+        document.getElementById('full-chart-title').innerText = symbol;
         new TradingView.widget({
             "autosize": true,
             "symbol": symbol.includes(':') ? symbol : "NASDAQ:" + symbol,
@@ -165,54 +165,85 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
             "theme": "dark",
             "style": "1",
             "locale": "es",
-            "container_id": "tv-container",
-            "hide_side_toolbar": false,
-            "allow_symbol_change": true
+            "container_id": "tv-full-div",
+            "hide_side_toolbar": false
         });
     };
-    window.closeChart = () => document.getElementById('chart-modal').style.display = 'none';
 
-    // GUARDAR
+    window.closeChart = () => {
+        document.getElementById('chart-container-full').style.display = 'none';
+    };
+
+    // ELIMINAR
+    window.deleteTrade = async (id, e) => {
+        e.stopPropagation();
+        if(confirm('¿Borrar este trade?')) await deleteDoc(doc(db, "trades", id));
+    };
+
+    // EDITAR (CARGAR EN FORM)
+    window.editTrade = (id, symbol, qty, entry, exit, e) => {
+        e.stopPropagation();
+        document.getElementById('f-id').value = id;
+        document.getElementById('f-sym').value = symbol;
+        document.getElementById('f-qty').value = qty;
+        document.getElementById('f-entry').value = entry;
+        document.getElementById('f-exit').value = exit;
+        document.getElementById('btn-submit').innerText = "Actualizar Trade";
+        showPage('new', document.querySelectorAll('.nav-item')[1]);
+    };
+
+    // GUARDAR O ACTUALIZAR
     document.getElementById('trade-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        await addDoc(collection(db, "trades"), {
+        const id = document.getElementById('f-id').value;
+        const data = {
             symbol: document.getElementById('f-sym').value.toUpperCase(),
             qty: parseFloat(document.getElementById('f-qty').value),
             entry: parseFloat(document.getElementById('f-entry').value),
             exit: parseFloat(document.getElementById('f-exit').value),
             timestamp: new Date()
-        });
+        };
+
+        if(id) {
+            await updateDoc(doc(db, "trades", id), data);
+        } else {
+            await addDoc(collection(db, "trades"), data);
+        }
+        
         document.getElementById('trade-form').reset();
+        document.getElementById('f-id').value = "";
+        document.getElementById('btn-submit').innerText = "Guardar Trade";
         showPage('trades', document.querySelectorAll('.nav-item')[0]);
     });
 
-    // CARGAR TRADES
     onSnapshot(query(collection(db, "trades"), orderBy("timestamp", "desc")), (snap) => {
         const tbody = document.getElementById('trades-tbody');
         tbody.innerHTML = '';
         let totalPnl = 0, wins = 0, count = 0;
 
-        snap.forEach(doc => {
-            const t = doc.data();
+        snap.forEach(d => {
+            const t = d.data();
             const pnl = (t.exit - t.entry) * (t.qty || 1);
             totalPnl += pnl; count++;
             if(pnl > 0) wins++;
 
             const tr = document.createElement('tr');
+            tr.onclick = () => openChart(t.symbol);
             tr.innerHTML = `
-                <td style="font-weight:bold; color:white">${t.symbol}</td>
+                <td style="font-weight:bold">${t.symbol}</td>
                 <td class="font-mono">${t.entry}</td>
                 <td class="font-mono">${t.exit}</td>
                 <td class="font-mono" style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnl.toFixed(2)}</td>
                 <td><span class="${pnl >= 0 ? 'pill-win' : 'pill-loss'}">${pnl >= 0 ? 'WIN' : 'LOSS'}</span></td>
+                <td>
+                    <span class="btn-edit" onclick="editTrade('${d.id}','${t.symbol}',${t.qty},${t.entry},${t.exit}, event)">Edit</span>
+                    <span class="btn-delete" onclick="deleteTrade('${d.id}', event)">Delete</span>
+                </td>
             `;
-            tr.onclick = () => openChart(t.symbol);
             tbody.appendChild(tr);
         });
 
-        // ACTUALIZAR METRICAS
         document.getElementById('m-wr').innerText = count > 0 ? Math.round((wins/count)*100)+'%' : '0%';
-        document.getElementById('m-count').innerText = count;
         document.getElementById('m-pnl').innerText = '$' + totalPnl.toFixed(2);
         document.getElementById('side-pnl').innerText = '$' + totalPnl.toFixed(2);
         document.getElementById('side-pnl').style.color = totalPnl >= 0 ? 'var(--green)' : 'var(--red)';
