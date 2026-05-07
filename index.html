@@ -63,7 +63,7 @@
     // 1. Obtener la clave desde el Backend de Vercel (carpeta /api)
     async function fetchConfig() {
         try {
-            const res = await fetch('/api/get-key');
+            const res = await fetch('/api/get-key.mjs');
             const data = await res.json();
             if (data.apiKey) {
                 API_KEY = data.apiKey;
