@@ -16,7 +16,7 @@
         
         .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100vh; }
 
-        /* SIDEBAR LIMPIO */
+        /* SIDEBAR - CORREGIDO */
         .sidebar { background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; z-index: 300; }
         .logo { padding: 0 24px 30px; font-weight: 700; font-size: 18px; letter-spacing: -0.5px; color: #fff; }
         .logo span { color: var(--green); }
@@ -30,13 +30,13 @@
         .page { display: none; }
         .page.active { display: block; }
 
-        /* STATS */
+        /* CARDS ESTADÍSTICAS */
         .stats-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 25px; }
         .stat-card { background: var(--bg-card); border: 1px solid var(--border); padding: 15px; border-radius: 6px; }
         .stat-card label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; display: block; margin-bottom: 5px; }
         .stat-card .val { font-family: var(--font-mono); font-size: 16px; font-weight: 600; }
 
-        /* FORM */
+        /* FORMULARIO */
         .form-container { background: var(--bg-card); padding: 30px; border-radius: 8px; border: 1px solid var(--border); max-width: 1100px; margin: 0 auto; }
         .form-section-title { font-size: 12px; color: var(--text-dim); margin-bottom: 20px; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         .input-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
@@ -45,10 +45,10 @@
         .input, .select, .textarea { background: var(--bg-input); border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 4px; outline: none; font-family: inherit; }
         
         .tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
-        .tag-btn { padding: 6px 12px; background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 4px; cursor: pointer; font-size: 11px; transition: 0.2s; }
+        .tag-btn { padding: 6px 12px; background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 4px; cursor: pointer; font-size: 11px; }
         .tag-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-        /* TABLE */
+        /* TABLA */
         .table-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
         .trades-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .trades-table th { background: #1c212d; padding: 12px; text-align: left; color: var(--text-dim); font-size: 10px; text-transform: uppercase; }
@@ -57,7 +57,7 @@
         .badge-win { background: #00d4a020; color: var(--green); }
         .badge-loss { background: #ff556620; color: var(--red); }
 
-        /* DETAIL VIEW */
+        /* VISTA DETALLE */
         #trade-detail-view {
             position: fixed; top: 0; left: 240px; right: 0; bottom: 0;
             background: var(--bg-main); z-index: 500; display: none;
@@ -67,13 +67,10 @@
         .detail-header { padding: 20px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .detail-chart { flex: 1; background: #000; }
         .detail-sidebar { padding: 30px; overflow-y: auto; background: var(--bg-sidebar); }
-        .detail-sidebar::-webkit-scrollbar { width: 5px; }
-        .detail-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
         
         .info-block { margin-bottom: 25px; }
         .info-block label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; display: block; margin-bottom: 8px; }
         .info-block p { font-family: var(--font-mono); font-size: 16px; }
-        .quick-save-btn { width: 100%; background: var(--green); color: #000; font-weight: 700; padding: 12px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -126,8 +123,6 @@
                             <div class="input-group"><label>Dirección *</label><select id="f-dir" class="select"><option>Long</option><option>Short</option></select></div>
                             <div class="input-group"><label>Cantidad *</label><input type="number" id="f-qty" class="input" value="100"></div>
                         </div>
-
-                        <div class="form-section-title">Ejecución</div>
                         <div class="input-row">
                             <div class="input-group"><label>Fecha Entrada</label><input type="date" id="f-date-in" class="input"></div>
                             <div class="input-group"><label>Hora Entrada</label><input type="time" id="f-time-in" class="input"></div>
@@ -136,70 +131,47 @@
                         <div class="input-row">
                             <div class="input-group"><label>Fecha Salida</label><input type="date" id="f-date-out" class="input"></div>
                             <div class="input-group"><label>Hora Salida</label><input type="time" id="f-time-out" class="input"></div>
-                            <div class="input-group"><label>Precio Salida</label><input type="number" step="any" id="f-p-out" class="input" placeholder="Vacío = Abierto"></div>
+                            <div class="input-group"><label>Precio Salida</label><input type="number" step="any" id="f-p-out" class="input"></div>
                         </div>
-
-                        <div class="form-section-title">Gestión y Clasificación</div>
                         <div class="input-row">
                             <div class="input-group"><label>Stop Loss</label><input type="number" step="any" id="f-sl" class="input"></div>
                             <div class="input-group"><label>Comisión ($)</label><input type="number" step="any" id="f-comm" class="input" value="0"></div>
-                            <div class="input-group"><label>Timeframe</label><select id="f-tf" class="select"><option>1m</option><option selected>2m</option><option>5m</option><option>15m</option><option>1h</option><option>D</option></select></div>
+                            <div class="input-group"><label>Timeframe</label><select id="f-tf" class="select"><option>1m</option><option selected>5m</option><option>15m</option><option>1h</option><option>D</option></select></div>
                         </div>
-                        <div class="input-row">
-                            <div class="input-group"><label>Exchange</label><select id="f-ex" class="select"><option>NASDAQ</option><option>NYSE</option><option>BINANCE</option></select></div>
-                        </div>
-
-                        <div class="input-group" style="margin-top:15px">
-                            <label>Setup</label>
-                            <div class="tag-row" id="setup-tags">
-                                <button type="button" class="tag-btn" onclick="this.classList.toggle('active')">Gap & Go</button>
-                                <button type="button" class="tag-btn" onclick="this.classList.toggle('active')">Breakout</button>
-                                <button type="button" class="tag-btn" onclick="this.classList.toggle('active')">Pullback</button>
-                                <button type="button" class="tag-btn" onclick="this.classList.toggle('active')">VWAP</button>
-                                <button type="button" class="tag-btn" onclick="this.classList.toggle('active')">Reversal</button>
-                            </div>
-                        </div>
-
-                        <div class="input-group" style="margin-top:20px"><label>Notas / Razón de Entrada</label><textarea id="f-notes" class="textarea" rows="3"></textarea></div>
-                        <div class="input-group" style="margin-top:20px"><label>Lecciones Aprendidas</label><textarea id="f-lessons" class="textarea" rows="2"></textarea></div>
-
-                        <div style="margin-top:30px; display:flex; gap:12px">
-                            <button type="submit" class="tag-btn" style="background:var(--accent); color:white; padding:12px 40px; font-weight:600" id="btn-save">GUARDAR TRADE</button>
-                            <button type="button" class="tag-btn" onclick="nav('trades')" style="padding:12px 40px">CANCELAR</button>
-                        </div>
+                        <div style="margin-top:20px"><label>Notas / Razón de Entrada</label><textarea id="f-notes" class="textarea" rows="3"></textarea></div>
+                        <button type="submit" class="tag-btn" style="background:var(--accent); color:white; padding:12px 40px; margin-top:20px" id="btn-save">GUARDAR TRADE</button>
                     </form>
                 </div>
             </div>
+            
+            <div id="p-import" class="page"><h2>Importar Trades</h2></div>
+            <div id="p-analytics" class="page"><h2>Analítica</h2></div>
         </div>
 
         <div id="trade-detail-view">
             <div class="detail-main">
                 <div class="detail-header">
-                    <div>
-                        <h2 id="det-header-title">TICKER — DIRECCIÓN</h2>
-                        <span id="det-header-meta" style="font-size:11px; color:var(--text-dim)"></span>
-                    </div>
+                    <div><h2 id="det-header-title">TICKER</h2></div>
                     <button class="tag-btn" onclick="closeDetail()">CERRAR VISTA</button>
                 </div>
                 <div class="detail-chart" id="tv-widget-full"></div>
             </div>
             <aside class="detail-sidebar">
                 <div style="display:flex; gap:10px; margin-bottom:30px">
-                    <button class="tag-btn" id="det-edit-btn" style="flex:1; background:var(--accent); color:white">EDITAR TODO</button>
+                    <button class="tag-btn" id="det-edit-btn" style="flex:1; background:var(--accent); color:white">EDITAR</button>
                     <button class="tag-btn" id="det-del-btn" style="flex:1; border-color:var(--red); color:var(--red)">ELIMINAR</button>
                 </div>
                 <div class="info-block"><label>P&L RESULTADO</label><p id="det-pnl" style="font-size:26px"></p></div>
-                <div class="info-block"><label>Entrada / Salida</label><p id="det-prices"></p></div>
                 
-                <div class="info-block" style="border-top:1px solid var(--border); padding-top:15px">
+                <div class="info-block">
                     <label>Notas de la Operación</label>
-                    <textarea id="det-notes-input" class="textarea" style="width:100%; font-size:13px; background:var(--bg-main)" rows="6"></textarea>
+                    <textarea id="det-notes-input" class="textarea" rows="6" style="width:100%; background:var(--bg-main)"></textarea>
                 </div>
                 <div class="info-block">
                     <label>Lecciones</label>
-                    <textarea id="det-lessons-input" class="textarea" style="width:100%; font-size:13px; background:var(--bg-main); color:var(--green)" rows="4"></textarea>
+                    <textarea id="det-lessons-input" class="textarea" rows="4" style="width:100%; background:var(--bg-main); color:var(--green)"></textarea>
                 </div>
-                <button id="btn-quick-save" class="quick-save-btn">GUARDAR NOTAS</button>
+                <button id="btn-quick-save" class="tag-btn" style="width:100%; background:var(--green); color:#000; font-weight:700">GUARDAR CAMBIOS</button>
             </aside>
         </div>
     </main>
@@ -225,28 +197,18 @@
 
     window.nav = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        const targetPage = document.getElementById('p-' + id);
-        if(targetPage) targetPage.classList.add('active');
-        
+        document.getElementById('p-' + id).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        // Marcar activo en el menú si existe
-        event?.currentTarget?.classList?.add('active');
-        
-        document.getElementById('page-title').innerText = id === 'trades' ? 'Mis trades' : 'Registro de Operación';
     };
 
     window.resetForm = () => {
         document.getElementById('trade-form').reset();
         document.getElementById('f-id').value = "";
-        document.querySelectorAll('#setup-tags .tag-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-save').innerText = "GUARDAR TRADE";
     };
 
     document.getElementById('trade-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('f-id').value;
-        const tags = Array.from(document.querySelectorAll('#setup-tags .tag-btn.active')).map(b => b.innerText);
-        
         const data = {
             ticker: document.getElementById('f-ticker').value.toUpperCase(),
             dir: document.getElementById('f-dir').value,
@@ -254,19 +216,10 @@
             dateIn: document.getElementById('f-date-in').value,
             timeIn: document.getElementById('f-time-in').value,
             pIn: parseFloat(document.getElementById('f-p-in').value),
-            dateOut: document.getElementById('f-date-out').value,
-            timeOut: document.getElementById('f-time-out').value,
             pOut: parseFloat(document.getElementById('f-p-out').value) || null,
-            sl: parseFloat(document.getElementById('f-sl').value) || 0,
             comm: parseFloat(document.getElementById('f-comm').value) || 0,
-            tf: document.getElementById('f-tf').value,
-            ex: document.getElementById('f-ex').value,
-            notes: document.getElementById('f-notes').value,
-            lessons: document.getElementById('f-lessons').value,
-            setups: tags,
             timestamp: new Date()
         };
-
         id ? await updateDoc(doc(db, "trades", id), data) : await addDoc(collection(db, "trades"), data);
         nav('trades');
     });
@@ -274,82 +227,67 @@
     onSnapshot(query(collection(db, "trades"), orderBy("timestamp", "desc")), (snap) => {
         const list = document.getElementById('trades-list');
         list.innerHTML = "";
-        let totalPnl = 0, wins = 0, open = 0;
+        let totalPnl = 0;
         allTrades = [];
 
         snap.forEach(d => {
             const t = { id: d.id, ...d.data() };
             allTrades.push(t);
             const pnl = t.pOut ? (t.dir === 'Long' ? (t.pOut - t.pIn) : (t.pIn - t.pOut)) * t.qty - t.comm : 0;
-            if (!t.pOut) open++;
             totalPnl += pnl;
-            if(pnl > 0) wins++;
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="color:var(--text-dim)">${t.dateIn || '-'}</td>
+                <td>${t.dateIn || '-'}</td>
                 <td style="font-weight:700">${t.ticker}</td>
                 <td><span class="badge" style="border:1px solid ${t.dir==='Long'?'var(--green)':'var(--red)'}">${t.dir}</span></td>
-                <td style="font-size:11px; color:var(--text-dim)">${t.setups ? t.setups.join(', ') : '-'}</td>
+                <td>-</td>
                 <td>$${t.pIn}</td>
-                <td>${t.pOut ? '$'+t.pOut : '<span style="color:var(--accent)">OPEN</span>'}</td>
-                <td style="color:${pnl>=0?'var(--green)':'var(--red)'}; font-weight:600">${pnl>=0?'+':''}${pnl.toFixed(2)}</td>
-                <td><span class="badge ${pnl>=0?'badge-win':'badge-loss'}">${t.pOut ? (pnl>=0?'Win':'Loss') : 'Open'}</span></td>
+                <td>${t.pOut ? '$'+t.pOut : 'OPEN'}</td>
+                <td style="color:${pnl>=0?'var(--green)':'var(--red)'}">$${pnl.toFixed(2)}</td>
+                <td><span class="badge ${pnl>=0?'badge-win':'badge-loss'}">${t.pOut ? 'Closed' : 'Open'}</span></td>
                 <td><button class="tag-btn" onclick="event.stopPropagation(); loadEdit('${t.id}')">Edit</button></td>
             `;
             tr.onclick = () => openDetail(t);
             list.appendChild(tr);
         });
-
         document.getElementById('st-pnl').innerText = `$${totalPnl.toFixed(2)}`;
-        document.getElementById('st-pnl').style.color = totalPnl >= 0 ? 'var(--green)' : 'var(--red)';
-        document.getElementById('st-count').innerText = allTrades.length;
-        document.getElementById('st-open').innerText = open;
-        document.getElementById('st-wr').innerText = allTrades.length ? Math.round((wins/allTrades.length)*100)+'%' : '0%';
     });
 
     window.openDetail = (t) => {
         document.getElementById('trade-detail-view').style.display = 'grid';
         document.getElementById('det-header-title').innerText = `${t.ticker} — ${t.dir}`;
-        document.getElementById('det-header-meta').innerText = `FECHA: ${t.dateIn} | TF: ${t.tf} | EXCHANGE: ${t.ex}`;
-        
         const pnl = t.pOut ? (t.dir === 'Long' ? (t.pOut - t.pIn) : (t.pIn - t.pOut)) * t.qty - t.comm : 0;
         document.getElementById('det-pnl').innerText = `$${pnl.toFixed(2)}`;
         document.getElementById('det-pnl').style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
-        document.getElementById('det-prices').innerText = `$${t.pIn} → ${t.pOut || 'Abierta'}`;
         
-        // Cargar notas en inputs editables
+        // Cargar textos en áreas editables
         document.getElementById('det-notes-input').value = t.notes || "";
         document.getElementById('det-lessons-input').value = t.lessons || "";
 
-        // GRÁFICO CORREGIDO (2 MINUTOS)
+        // GRÁFICO CORREGIDO - 2 MINUTOS
+        document.getElementById('tv-widget-full').innerHTML = ""; // Limpiar antes de cargar
         new TradingView.widget({
             "autosize": true,
             "symbol": t.ticker,
             "interval": "2", // Forzado a 2min
-            "timezone": "Etc/UTC",
             "theme": "dark",
             "style": "1",
             "locale": "es",
-            "toolbar_bg": "#f1f3f6",
-            "enable_publishing": false,
-            "hide_side_toolbar": false,
-            "allow_symbol_change": true,
             "container_id": "tv-widget-full"
         });
 
-        // BOTÓN GUARDADO RÁPIDO
+        // GUARDADO RÁPIDO
         document.getElementById('btn-quick-save').onclick = async () => {
-            const docRef = doc(db, "trades", t.id);
-            await updateDoc(docRef, {
+            await updateDoc(doc(db, "trades", t.id), {
                 notes: document.getElementById('det-notes-input').value,
                 lessons: document.getElementById('det-lessons-input').value
             });
-            alert("Notas actualizadas");
+            alert("Guardado correctamente");
         };
 
         document.getElementById('det-del-btn').onclick = async () => {
-            if(confirm("¿Eliminar este registro permanentemente?")) { await deleteDoc(doc(db, "trades", t.id)); closeDetail(); }
+            if(confirm("¿Eliminar?")) { await deleteDoc(doc(db, "trades", t.id)); closeDetail(); }
         };
         document.getElementById('det-edit-btn').onclick = () => { closeDetail(); loadEdit(t.id); };
     };
@@ -359,24 +297,8 @@
         nav('new-trade');
         document.getElementById('f-id').value = t.id;
         document.getElementById('f-ticker').value = t.ticker;
-        document.getElementById('f-dir').value = t.dir;
-        document.getElementById('f-qty').value = t.qty;
-        document.getElementById('f-date-in').value = t.dateIn;
-        document.getElementById('f-time-in').value = t.timeIn;
         document.getElementById('f-p-in').value = t.pIn;
-        document.getElementById('f-date-out').value = t.dateOut || "";
-        document.getElementById('f-time-out').value = t.timeOut || "";
         document.getElementById('f-p-out').value = t.pOut || "";
-        document.getElementById('f-sl').value = t.sl;
-        document.getElementById('f-comm').value = t.comm;
-        document.getElementById('f-tf').value = t.tf;
-        document.getElementById('f-ex').value = t.ex;
-        document.getElementById('f-notes').value = t.notes;
-        document.getElementById('f-lessons').value = t.lessons;
-        document.querySelectorAll('#setup-tags .tag-btn').forEach(btn => {
-            btn.classList.toggle('active', t.setups && t.setups.includes(btn.innerText));
-        });
-        document.getElementById('btn-save').innerText = "ACTUALIZAR DATOS";
     };
 
     window.closeDetail = () => document.getElementById('trade-detail-view').style.display = 'none';
